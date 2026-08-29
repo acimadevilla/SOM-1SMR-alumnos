@@ -330,6 +330,17 @@ Los bits fijos al principio de cada byte (`0`, `110`, `1110`, `11110` para el pr
 
 Cuando un archivo de texto se abre "lleno de símbolos raros" en vez de mostrar tildes o eñes correctamente, casi siempre es un problema de codificación: los bytes son los mismos, pero se están interpretando con el patrón de bits equivocado, así que el programa reconstruye un carácter distinto al que realmente se guardó.
 
+> **Vamos a practicar: comprueba tú mismo que UTF-8 no usa siempre el mismo número de bytes**
+>
+> Como cada carácter puede ocupar de 1 a 4 bytes, un archivo de texto no pesa "número de caracteres × un tamaño fijo" — pesa la suma de lo que ocupa cada carácter concreto.
+>
+> 1. Calcula a mano, carácter a carácter, cuántos bytes ocupará el texto **`Año 😀`** guardado en UTF-8 (usa la tabla de patrones de bits: recuerda que 'ñ' ya la tienes resuelta, y que un emoji cae muy por encima de U+FFFF).
+> 2. Abre un editor de **texto plano** — Bloc de notas en Windows, o un editor de texto en Linux (no uses Word ni ningún procesador de textos: añaden formato y no son texto plano). Escribe exactamente ese texto y guárdalo asegurándote de que la codificación sea UTF-8 (en Bloc de notas, se elige en el desplegable "Codificación" del cuadro de guardar).
+> 3. Comprueba el tamaño del archivo en bytes: en Windows, clic derecho → Propiedades (o el comando `dir` en una terminal); en Linux, `ls -l archivo.txt` o `wc -c archivo.txt`.
+> 4. ¿Coincide con tu cálculo? Si el tamaño real es un poco mayor de lo esperado, no te preocupes: puede deberse a un carácter de salto de línea añadido automáticamente al guardar (1-2 bytes más), o a que el editor haya incluido una marca **BOM** al principio del archivo (3 bytes más) — infórmate de qué es un BOM si te encuentras con esta diferencia.
+>
+> **Ejemplo resuelto (cálculo):** `A` (1 byte) + `ñ` (2 bytes) + `o` (1 byte) + espacio (1 byte) + `😀` (4 bytes) = **9 bytes para 5 caracteres**.
+
 ### Sistema octal: por qué nos interesa aquí
 
 El sistema **octal** (base 8) agrupa los bits de tres en tres para representarlos con un solo dígito (0-7). No es casualidad que se use precisamente para permisos: **un permiso `rwx` son exactamente 3 bits** (uno por cada tipo de permiso, activado o desactivado), así que **un dígito octal representa un conjunto completo de permisos**. Es la razón real de que se use octal aquí, y no otra base.
