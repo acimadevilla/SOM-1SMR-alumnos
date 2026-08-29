@@ -248,11 +248,42 @@ En esta unidad trabajarás con números de hasta un byte (8 bits, valores de 0 a
 
 Un byte no solo sirve para representar cantidades: también puede representar un **carácter** de texto, según qué tabla de correspondencia se use.
 
-- **ASCII** fue el primer sistema de codificación ampliamente usado: asigna un valor numérico (de 0 a 127) a cada letra del alfabeto inglés, los dígitos y algunos símbolos. Es suficiente para escribir en inglés, pero **no incluye acentos, eñes, ni alfabetos distintos del latino** — se quedó corto en cuanto la informática se extendió más allá del mundo anglosajón.
-- **Unicode** resuelve esa limitación asignando un identificador único a prácticamente cualquier carácter de cualquier idioma o sistema de escritura existente (y también a símbolos como los emojis). Unicode se diseñó para ser compatible con ASCII: sus primeros 128 caracteres coinciden exactamente.
-- **UTF-8** y **UTF-16** son formas distintas de convertir esos identificadores Unicode en bytes concretos. **UTF-8** es, con diferencia, la más usada hoy en la web y en Linux, precisamente porque mantiene esa compatibilidad con ASCII a nivel de bytes.
+**ASCII**, el primer sistema de codificación ampliamente usado, asigna un valor numérico (de 0 a 127) a cada letra del alfabeto inglés, los dígitos y algunos símbolos. Es suficiente para escribir en inglés, pero **no incluye acentos, eñes, ni alfabetos distintos del latino** — se quedó corto en cuanto la informática se extendió más allá del mundo anglosajón.
 
-Cuando un archivo de texto se abre "lleno de símbolos raros" en vez de mostrar tildes o eñes correctamente, casi siempre es un problema de codificación: los bytes son los mismos, pero se están interpretando con la tabla de correspondencia equivocada.
+**Unicode** resuelve esa limitación: es una tabla enorme que asigna a cada carácter posible un número único, llamado ***code point***, que se escribe como U+XXXX en hexadecimal. Por ejemplo: 'A' → U+0041, 'ñ' → U+00F1, '€' → U+20AC, '😀' → U+1F600. El estándar actual define posiciones hasta U+10FFFF (más de 1,1 millones posibles), y se diseñó para ser compatible con ASCII: sus primeros 128 caracteres coinciden exactamente.
+
+Es importante distinguir dos cosas que suelen confundirse: **Unicode solo dice *qué número* le corresponde a cada carácter — no dice *cómo* guardar ese número como bytes**. Eso es trabajo de una **codificación** (encoding): UTF-8, UTF-16 o UTF-32.
+
+#### UTF-8: cómo un programa convierte bytes en caracteres
+
+**UTF-8** es, con diferencia, la codificación más usada hoy: se estima que la usan más del 97-98% de las páginas web, y es la codificación por defecto en Linux, en la mayoría de lenguajes de programación y en formatos como JSON.
+
+UTF-8 codifica cada carácter usando entre **1 y 4 bytes**, según lo alto que sea su *code point*:
+
+| Rango de *code point* | Bytes usados | Patrón de bits |
+|---|---|---|
+| U+0000 – U+007F (ASCII) | 1 byte | `0xxxxxxx` |
+| U+0080 – U+07FF | 2 bytes | `110xxxxx 10xxxxxx` |
+| U+0800 – U+FFFF | 3 bytes | `1110xxxx 10xxxxxx 10xxxxxx` |
+| U+10000 – U+10FFFF | 4 bytes | `11110xxx 10xxxxxx 10xxxxxx 10xxxxxx` |
+
+Los bits fijos al principio de cada byte (`0`, `110`, `1110`, `11110` para el primer byte de cada carácter, y `10` para los bytes de continuación) son los que permiten a cualquier programa, leyendo un flujo de bytes, saber exactamente dónde empieza y dónde termina cada carácter.
+
+**Por qué UTF-8 es compatible con ASCII:** cualquier carácter ASCII (0-127) se codifica en UTF-8 con un único byte, con el mismo valor que ya tenía en ASCII. Es decir, **cualquier texto ASCII ya es, sin cambiar ni un bit, un texto UTF-8 válido** — la razón principal de que UTF-8 se haya impuesto sin romper nada de lo que ya existía.
+
+**Ejemplo resuelto: codificar 'ñ' en UTF-8**
+
+1. El *code point* de 'ñ' es U+00F1 = 241 en decimal.
+2. 241 está entre 128 y 2047 → necesita 2 bytes, patrón `110xxxxx 10xxxxxx` (11 bits disponibles).
+3. 241 en binario, con 11 bits: `00011110001`.
+4. Reparto: los primeros 5 bits (`00011`) van al primer byte; los últimos 6 (`110001`), al segundo.
+5. Resultado: `11000011 10110001` → en hexadecimal, **C3 B1**. Así se guarda exactamente la letra 'ñ' en cualquier archivo de texto en UTF-8.
+
+#### UTF-16: dónde sigue vivo aunque no se vea
+
+**UTF-16** usa bloques de 2 bytes para la mayoría de caracteres, y "pares subrogados" (dos bloques de 2 bytes combinados) para los que quedan fuera de ese rango, como muchos emojis. En la web ha perdido terreno frente a UTF-8, pero sigue siendo la codificación interna que usan **Windows** (en sus APIs internas), **Java** (en su tipo `String`) y **JavaScript** (en la representación interna de las cadenas de texto).
+
+Cuando un archivo de texto se abre "lleno de símbolos raros" en vez de mostrar tildes o eñes correctamente, casi siempre es un problema de codificación: los bytes son los mismos, pero se están interpretando con el patrón de bits equivocado, así que el programa reconstruye un carácter distinto al que realmente se guardó.
 
 ### Sistema octal: por qué nos interesa aquí
 
@@ -302,7 +333,13 @@ Es decir, `640` equivale a `rw-r-----`.
 
 ### Para practicar
 
-**Actividad (codificación de caracteres):** a partir de la tabla ASCII reducida que se te proporcione, traduce una palabra corta en inglés a su secuencia de valores ASCII (uno por letra), y a la inversa, decodifica una secuencia de valores que se te dé. Después, responde: ¿por qué la palabra "Ñandú" no se puede representar completa usando solo ASCII, y sí usando Unicode?
+**Actividad (ASCII):** a partir de la tabla ASCII reducida que se te proporcione, traduce una palabra corta en inglés a su secuencia de valores ASCII (uno por letra), y a la inversa, decodifica una secuencia de valores que se te dé. Después, responde: ¿por qué la palabra "Ñandú" no se puede representar completa usando solo ASCII, y sí usando Unicode?
+
+**Actividad (UTF-8):** siguiendo el mismo método del ejemplo resuelto de 'ñ' (U+00F1 → `C3 B1`), codifica en UTF-8 el carácter 'é' (*code point* U+00E9, decimal 233), mostrando cada paso: rango del *code point*, número de bytes necesarios, conversión a binario y reparto en el patrón de bits.
+
+**Ejemplo resuelto (primer paso, para orientarte):** 233 está entre 128 y 2047, así que necesita 2 bytes, con el patrón `110xxxxx 10xxxxxx`.
+
+Completa tú el resto: la conversión de 233 a binario en 11 bits, el reparto en los dos bytes, y el resultado final en hexadecimal.
 
 **Actividad (unidades de medida):** calcula, mostrando el cálculo, cuántos GiB mostrará aproximadamente el sistema operativo para un disco anunciado como de 256 GB y para uno de 1 TB.
 
@@ -360,7 +397,7 @@ Con lo aprendido en esta unidad:
 - Los núcleos pueden ser monolíticos (Linux), híbridos (Windows, macOS) o microkernel — son diseños distintos, no una jerarquía de calidad.
 - Un proceso es un programa en ejecución, con estados: nuevo, listo, ejecución, bloqueado, terminado.
 - Windows organiza los archivos con letras de unidad; Linux usa una única raíz `/` y distingue mayúsculas de minúsculas.
-- El texto también se representa en binario mediante una tabla de codificación: ASCII (limitado al alfabeto inglés) y Unicode/UTF-8 (compatible con ASCII, pero capaz de representar cualquier idioma).
+- El texto también se representa en binario: Unicode asigna un número (*code point*) a cada carácter posible; UTF-8 (la codificación dominante hoy) convierte ese número en 1 a 4 bytes según un patrón de bits fijo, manteniendo compatibilidad con ASCII; UTF-16 sigue viva por dentro de Windows, Java y JavaScript.
 - El byte tiene múltiplos según dos normas: SI (base 10, el que anuncia el fabricante) e IEC 80000-13 (base 2, el que suele calcular y mal-etiquetar el sistema operativo) — de ahí que un disco de 500 GB se muestre como ~465 GB.
 - Un dígito octal representa un conjunto completo de permisos `rwx` (3 bits). Los permisos se definen para propietario, grupo y otros.
 - El journaling protege la consistencia del sistema de archivos ante interrupciones, pero no sustituye a las copias de seguridad.
