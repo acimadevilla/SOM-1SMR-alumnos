@@ -71,6 +71,14 @@ No hace falta que sepas programar para esta unidad — lo importante es que enti
 
 Resuelve el resto por tu cuenta, siguiendo el mismo razonamiento.
 
+> **Vamos a practicar: localiza software de base real en tu propio equipo**
+>
+> En Windows, abre el **Administrador de dispositivos** (búscalo en el menú Inicio) y despliega al menos tres categorías (por ejemplo, "Adaptadores de red", "Controladoras de sonido, vídeo y juegos" o "Adaptadores de pantalla"). Elige tres dispositivos y anota, para cada uno, el nombre del controlador que aparece en sus propiedades (pestaña "Controlador" → "Proveedor del controlador" y "Fecha del controlador").
+>
+> Si tu equipo tiene también Linux instalado, compara con el comando `lspci` (dispositivos conectados a la placa base) o `lsusb` (dispositivos USB) ejecutado en una terminal: obtendrás una lista equivalente, aunque el sistema no use la palabra "controlador" de la misma forma explícita.
+>
+> **Reflexiona:** ¿alguno de esos tres dispositivos dejaría de funcionar correctamente si le faltara su controlador, aunque el hardware siga físicamente bien conectado?
+
 ---
 
 ## 2. Funciones y arquitectura del sistema operativo
@@ -93,6 +101,12 @@ Los programas que tienes abiertos a la vez, sumados, suelen necesitar más memor
 En vez de cargar un programa entero en RAM de golpe, el sistema operativo lo divide en bloques (páginas) y **solo carga en RAM las páginas que se están usando en cada momento**. Si hace falta una página que no está cargada, el sistema la trae desde el almacenamiento; si hace falta sitio en RAM, saca de ahí alguna página que no se esté usando, guardándola temporalmente en disco (lo que Windows llama "archivo de paginación" y Linux llama "swap").
 
 Esta es la razón real de por qué se pueden tener más aplicaciones abiertas de las que "caben" en la RAM instalada, y también de por qué el ordenador se ralentiza mucho cuando empieza a depender demasiado del disco para esto: el disco, incluso un SSD, es mucho más lento que la RAM.
+
+> **Vamos a practicar: comprueba la memoria real de tu equipo**
+>
+> Abre el Administrador de tareas de Windows (`Ctrl+Shift+Esc`) → pestaña **Rendimiento** → **Memoria** (en Linux, el Monitor del sistema, o el comando `free -h` en una terminal). Anota tres datos: la RAM total instalada, la RAM en uso ahora mismo, y si aparece alguna referencia a "memoria virtual"/"archivo de paginación" (Windows) o "swap" (Linux), y cuánto espacio tiene reservado.
+>
+> **Reflexiona:** si cerraras ahora mismo todas las aplicaciones que tienes abiertas, ¿bajaría a cero el uso de RAM que muestra el sistema? ¿Por qué no?
 
 ### Arquitectura del sistema operativo por capas
 
@@ -177,6 +191,12 @@ En esta unidad no vas a estudiar cómo decide el sistema operativo qué proceso 
 
 Continúa tú la secuencia hasta que la página termina de cargar, identificando en qué momento el proceso pasa a estar **bloqueado** y por qué.
 
+> **Vamos a practicar: un programa, varios procesos**
+>
+> Abre tu navegador habitual y crea tres pestañas nuevas, cada una en una página distinta. Después abre el Administrador de tareas de Windows (o ejecuta `ps aux | grep <nombre-del-navegador>` en una terminal Linux) y cuenta cuántos procesos aparecen asociados a ese navegador.
+>
+> **Reflexiona:** si el navegador es un único programa instalado en tu disco, ¿por qué aparecen varios procesos al ejecutarlo? ¿Qué le pasaría al resto de pestañas si uno solo de esos procesos se bloqueara?
+
 ---
 
 ## 4. Sistema de archivos: organización y atributos
@@ -233,6 +253,26 @@ Un archivo oculto **no está protegido** de ningún modo especial: simplemente n
 **Ejemplo resuelto:** ruta absoluta → `/home/alumno/documentos/informe.txt`. Ruta relativa desde `/home/alumno` → `documentos/informe.txt`.
 
 **Actividad (mayúsculas):** de estos tres nombres de archivo — `Informe.docx`, `informe.docx`, `INFORME.docx` —, ¿cuántos archivos distintos son en Windows? ¿Y en Linux? Justifica tu respuesta con lo aprendido en este apartado.
+
+> **Vamos a practicar: compruébalo en los dos sistemas de tu propio equipo**
+>
+> Los equipos del aula tienen Windows y Linux disponibles, así que puedes comprobar esto con datos reales en vez de solo razonarlo:
+>
+> 1. En Windows, crea un archivo de texto llamado `prueba.txt` en una carpeta cualquiera. En esa misma carpeta, intenta crear ahora otro archivo llamado `Prueba.txt`. ¿Qué pasa?
+> 2. Arranca el mismo equipo en Linux y repite exactamente el mismo experimento: crea `prueba.txt` y, en la misma carpeta, `Prueba.txt`. ¿Cuántos archivos distintos tienes ahora?
+> 3. Comprueba también, en Windows, si puedes tener un archivo llamado `PRUEBA.txt` "encima" del que ya tenías, y anota qué mensaje te muestra el sistema si lo intentas.
+>
+> Anota lo que observas en cada sistema y relaciónalo con lo explicado en este apartado — no hay truco: es exactamente el comportamiento que se acaba de describir, comprobado de primera mano.
+>
+> **Vamos a practicar: tu propia ruta real**
+>
+> Abre el explorador de archivos de tu equipo Windows y navega hasta tu carpeta personal de Documentos. Haz clic en la barra de direcciones para que se muestre la ruta completa como texto y cópiala. Escríbela aquí como ruta absoluta y, después, escribe una ruta relativa hasta esa misma carpeta partiendo de tu carpeta de usuario (`C:\Usuarios\<tu usuario>`). Como cada alumno tiene un nombre de usuario distinto, tu ruta será distinta a la de cualquier compañero — no la puedes copiar de nadie.
+>
+> **Vamos a practicar: oculta un archivo de verdad**
+>
+> Crea un archivo de prueba en tu equipo y márcalo como oculto: en Windows, clic derecho → Propiedades → activa la casilla "Oculto"; en Linux, basta con renombrarlo añadiendo un punto delante del nombre (`.prueba.txt`). Comprueba que desaparece del explorador de archivos con la vista de "elementos ocultos" desactivada, y que vuelve a verse al activarla.
+>
+> **Reflexiona:** ¿has protegido realmente el contenido de ese archivo con esto? ¿Qué pasaría si alguien activa la opción de "mostrar archivos ocultos"?
 
 ---
 
@@ -409,6 +449,12 @@ $$500.000.000.000 \div 1024^3 = 500.000.000.000 \div 1.073.741.824 ≈ 465,7 \te
 
 No se ha perdido ningún byte: son exactamente los mismos, contados con dos reglas de agrupación distintas. Es importante que entiendas este cálculo, porque en cuanto empieces a particionar discos para tus máquinas virtuales vas a comprobarlo con tus propios ojos.
 
+> **Vamos a practicar: compruébalo con tu propio disco**
+>
+> En Windows, abre el Explorador de archivos, haz clic derecho sobre la unidad `C:` y entra en Propiedades. Anota la capacidad total que muestra el sistema (en GB). Después, busca la capacidad anunciada por el fabricante para ese mismo disco (en la caja, la factura o las especificaciones técnicas del equipo). ¿Coinciden exactamente los dos números? Si no, calcula a qué se debe la diferencia usando lo aprendido en este apartado.
+>
+> Si no tienes a mano el dato del fabricante, comprueba al menos que el número que Windows llama "GB" es en realidad GiB: en la misma ventana de Propiedades suele mostrarse también la capacidad exacta en bytes; divide ese valor entre 1024³ y comprueba que el resultado coincide con el "GB" que muestra el sistema.
+
 ### Permisos de archivos y directorios
 
 En Linux, cada archivo o directorio tiene permisos definidos para **tres conjuntos de usuarios**: el **propietario**, el **grupo** al que pertenece, y **otros** (el resto de usuarios del sistema). Para cada conjunto existen tres tipos de permiso:
@@ -495,6 +541,12 @@ Dos columnas de esta tabla conectan con contenido que ya has visto en esta unida
 
 - **Permisos tipo Unix**: es la explicación técnica de por qué un archivo puede "perder" sus permisos `rwx` al copiarlo a través de un sistema de archivos que no los soporta (FAT32/exFAT) — como en el caso práctico de cierre de esta unidad.
 - **Sensible a mayúsculas** (apartado 4): no es una propiedad de "Windows" o "Linux" en abstracto, es una propiedad del propio sistema de archivos.
+
+> **Vamos a practicar: comprueba el sistema de archivos de un pendrive real**
+>
+> Conecta a tu equipo una memoria USB o disco externo que ya tengas (o pide uno prestado). En Windows, clic derecho sobre la unidad → Propiedades, y localiza el campo "Sistema de archivos". En Linux, el mismo dato aparece con el comando `lsblk -f` en una terminal, o en las propiedades del dispositivo desde el gestor de archivos gráfico.
+>
+> Anota qué sistema de archivos tiene formateado y compáralo con la tabla de este apartado: ¿tiene sentido ese sistema de archivos para el uso que le das habitualmente a ese dispositivo? Si te sorprende el resultado, piensa si ese pendrive se ha usado alguna vez en un dispositivo distinto a un ordenador (una cámara, una televisión, una videoconsola...), y si eso explica la elección.
 
 ### Para practicar
 
