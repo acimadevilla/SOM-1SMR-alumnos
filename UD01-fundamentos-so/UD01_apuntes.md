@@ -258,6 +258,43 @@ Un byte no solo sirve para representar cantidades: también puede representar un
 
 **ASCII**, el primer sistema de codificación ampliamente usado, asigna un valor numérico (de 0 a 127) a cada letra del alfabeto inglés, los dígitos y algunos símbolos. Es suficiente para escribir en inglés, pero **no incluye acentos, eñes, ni alfabetos distintos del latino** — se quedó corto en cuanto la informática se extendió más allá del mundo anglosajón.
 
+#### Tabla ASCII reducida
+
+No hace falta memorizarla: consúltala cada vez que necesites codificar o decodificar un carácter en las actividades de esta unidad.
+
+**Letras mayúsculas**
+
+| Letra | Dec | Letra | Dec | Letra | Dec | Letra | Dec |
+|---|---|---|---|---|---|---|---|
+| A | 65 | H | 72 | O | 79 | V | 86 |
+| B | 66 | I | 73 | P | 80 | W | 87 |
+| C | 67 | J | 74 | Q | 81 | X | 88 |
+| D | 68 | K | 75 | R | 82 | Y | 89 |
+| E | 69 | L | 76 | S | 83 | Z | 90 |
+| F | 70 | M | 77 | T | 84 | | |
+| G | 71 | N | 78 | U | 85 | | |
+
+**Letras minúsculas**
+
+| Letra | Dec | Letra | Dec | Letra | Dec | Letra | Dec |
+|---|---|---|---|---|---|---|---|
+| a | 97 | h | 104 | o | 111 | v | 118 |
+| b | 98 | i | 105 | p | 112 | w | 119 |
+| c | 99 | j | 106 | q | 113 | x | 120 |
+| d | 100 | k | 107 | r | 114 | y | 121 |
+| e | 101 | l | 108 | s | 115 | z | 122 |
+| f | 102 | m | 109 | t | 116 | | |
+| g | 103 | n | 110 | u | 117 | | |
+
+**Dígitos y símbolos habituales**
+
+| Carácter | Dec | Carácter | Dec | Carácter | Dec | Carácter | Dec |
+|---|---|---|---|---|---|---|---|
+| (espacio) | 32 | 3 | 51 | 6 | 54 | 9 | 57 |
+| 0 | 48 | 4 | 52 | 7 | 55 | . | 46 |
+| 1 | 49 | 5 | 53 | 8 | 56 | , | 44 |
+| 2 | 50 | | | | | | |
+
 **Unicode** resuelve esa limitación: es una tabla enorme que asigna a cada carácter posible un número único, llamado ***code point***, que se escribe como U+XXXX en hexadecimal. Por ejemplo: 'A' → U+0041, 'ñ' → U+00F1, '€' → U+20AC, '😀' → U+1F600. El estándar actual define posiciones hasta U+10FFFF (más de 1,1 millones posibles), y se diseñó para ser compatible con ASCII: sus primeros 128 caracteres coinciden exactamente.
 
 Es importante distinguir dos cosas que suelen confundirse: **Unicode solo dice *qué número* le corresponde a cada carácter — no dice *cómo* guardar ese número como bytes**. Eso es trabajo de una **codificación** (encoding): UTF-8, UTF-16 o UTF-32.
