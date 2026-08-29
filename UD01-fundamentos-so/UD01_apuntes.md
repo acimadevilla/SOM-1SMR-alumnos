@@ -295,7 +295,26 @@ Cuando un archivo de texto se abre "lleno de símbolos raros" en vez de mostrar 
 
 ### Sistema octal: por qué nos interesa aquí
 
-El sistema **octal** (base 8) agrupa los bits de tres en tres para representarlos con un solo dígito (0-7). No es casualidad que se use precisamente para permisos: **un permiso `rwx` son exactamente 3 bits** (uno por cada tipo de permiso, activado o desactivado), así que **un dígito octal representa un conjunto completo de permisos**. Es la razón real de que se use octal aquí, y no otra base — por ejemplo, hexadecimal agrupa de 4 en 4 bits y no encajaría de forma tan limpia con un conjunto de 3 permisos.
+El sistema **octal** (base 8) agrupa los bits de tres en tres para representarlos con un solo dígito (0-7). No es casualidad que se use precisamente para permisos: **un permiso `rwx` son exactamente 3 bits** (uno por cada tipo de permiso, activado o desactivado), así que **un dígito octal representa un conjunto completo de permisos**. Es la razón real de que se use octal aquí, y no otra base.
+
+### Sistema hexadecimal: por qué existe y dónde lo vas a ver
+
+El sistema **hexadecimal** (base 16, dígitos del 0 al 9 y luego de la A a la F para el 10-15) agrupa el binario en bloques de **4 bits**, no de 3 como el octal.
+
+Un byte son 8 bits. 8 no se divide limpiamente en grupos de 3 (sobra resto), pero sí exactamente en dos grupos de 4 — así que **un byte completo se escribe siempre con exactamente 2 dígitos hexadecimales**. Por eso el hexadecimal es la notación estándar para cualquier dato organizado en bytes: colores web (`#RRGGBB`, un byte por cada componente de color), direcciones MAC de tarjetas de red (6 bytes = 12 dígitos hex, agrupados como `00:1A:2B:3C:4D:5E`) y, de hecho, **los bytes de la codificación UTF-8 que ya has visto** (`C3 B1`, `C3 A9`...): ahora ya sabes qué es esa notación.
+
+| Binario | Hex | Binario | Hex |
+|---|---|---|---|
+| 0000 | 0 | 1000 | 8 |
+| 0001 | 1 | 1001 | 9 |
+| 0010 | 2 | 1010 | A |
+| 0011 | 3 | 1011 | B |
+| 0100 | 4 | 1100 | C |
+| 0101 | 5 | 1101 | D |
+| 0110 | 6 | 1110 | E |
+| 0111 | 7 | 1111 | F |
+
+**Ejemplo resuelto:** convertir el byte 201 (decimal) a hexadecimal. 201 en binario (8 bits) es `11001001`. Se separa en dos grupos de 4: `1100` y `1001`. Con la tabla: `1100` = C, `1001` = 9. Resultado: **C9**.
 
 ### Unidades de medida de la información
 
@@ -305,6 +324,34 @@ El byte es la unidad base para medir cantidades de información, pero sus múlti
 - La norma **IEC 80000-13**: kibi, mebi, gibi... en **base 2** (potencias de 1024). Es la que suelen calcular internamente los sistemas operativos: 1 KiB = 1024 bytes, 1 MiB = 1024 KiB, 1 GiB = 1024 MiB.
 
 El problema es que, por costumbre histórica, la mayoría de sistemas operativos calculan en GiB pero lo etiquetan en pantalla como "GB" — lo cual genera una confusión muy conocida.
+
+#### Tabla completa de múltiplos
+
+Kilo/mega/giga son solo los tres primeros escalones; la tabla continúa mucho más allá, y sigue exactamente el mismo patrón en las dos normas:
+
+| Prefijo SI | Símbolo | Potencia de 10 | Prefijo IEC | Símbolo | Potencia de 2 |
+|---|---|---|---|---|---|
+| kilo | k | 10³ | kibi | Ki | 2¹⁰ |
+| mega | M | 10⁶ | mebi | Mi | 2²⁰ |
+| giga | G | 10⁹ | gibi | Gi | 2³⁰ |
+| tera | T | 10¹² | tebi | Ti | 2⁴⁰ |
+| peta | P | 10¹⁵ | pebi | Pi | 2⁵⁰ |
+| exa | E | 10¹⁸ | exbi | Ei | 2⁶⁰ |
+| zetta | Z | 10²¹ | zebi | Zi | 2⁷⁰ |
+| yotta | Y | 10²⁴ | yobi | Yi | 2⁸⁰ |
+
+En el día a día solo vas a manejar hasta giga/tera (discos, memorias) o como mucho peta (centros de datos grandes). Exa, zetta y yotta existen y se usan —por ejemplo, se estima que el tráfico mundial de datos ronda ya varios zettabytes al año—, pero no son magnitudes con las que trabajará un técnico de sistemas en su día a día.
+
+#### Bits y bytes: por qué 1 Gbps no son 1 GB de descarga
+
+Hasta ahora hemos medido cantidades de información en **bytes** (1 byte = 8 bits). Pero hay un contexto donde la unidad habitual no es el byte, sino el **bit**: la velocidad de transmisión de datos en redes.
+
+- La **capacidad de almacenamiento** (discos, memorias, archivos) se mide en bytes: KB, MB, GB, TB...
+- La **velocidad de conexión** (internet, redes) se mide en bits por segundo: kbps, Mbps, Gbps...
+
+La convención de notación distingue ambas cosas por la caja de la letra: **b minúscula = bit, B mayúscula = byte**. No es un detalle tipográfico sin importancia: **Gb** (gigabit) y **GB** (gigabyte) difieren en un factor de 8.
+
+Esto explica una confusión muy habitual: una conexión a internet de "300 Mbps" no descarga a 300 megabytes por segundo, sino a 300 megabits por segundo — que son 300 ÷ 8 = 37,5 MB/s como máximo teórico (la velocidad real suele ser aún menor, por la sobrecarga del propio protocolo de red).
 
 #### El caso real: el disco de 500 GB que se queda en ~465 GB
 
@@ -348,6 +395,10 @@ Es decir, `640` equivale a `rw-r-----`.
 **Ejemplo resuelto (primer paso, para orientarte):** 233 está entre 128 y 2047, así que necesita 2 bytes, con el patrón `110xxxxx 10xxxxxx`.
 
 Completa tú el resto: la conversión de 233 a binario en 11 bits, el reparto en los dos bytes, y el resultado final en hexadecimal.
+
+**Actividad (hexadecimal):** convierte a hexadecimal los bytes (decimal) 58 y 175. Después, convierte a decimal los valores hexadecimales `4F` y `E8`.
+
+**Ejemplo resuelto:** 201 → `11001001` → grupos `1100` y `1001` → **C9**.
 
 **Actividad (unidades de medida):** calcula, mostrando el cálculo, cuántos GiB mostrará aproximadamente el sistema operativo para un disco anunciado como de 256 GB y para uno de 1 TB.
 
@@ -429,6 +480,7 @@ Con lo aprendido en esta unidad:
 - Un proceso es un programa en ejecución, con estados: nuevo, listo, ejecución, bloqueado, terminado.
 - Windows organiza los archivos con letras de unidad; Linux usa una única raíz `/` y distingue mayúsculas de minúsculas.
 - El texto también se representa en binario: Unicode asigna un número (*code point*) a cada carácter posible; UTF-8 (la codificación dominante hoy) convierte ese número en 1 a 4 bytes según un patrón de bits fijo, manteniendo compatibilidad con ASCII; UTF-16 sigue viva por dentro de Windows, Java y JavaScript.
+- El hexadecimal agrupa el binario de 4 en 4 bits: un byte se escribe siempre con 2 dígitos hex, por eso se usa para colores web, direcciones MAC y los bytes de UTF-8.
 - El byte tiene múltiplos según dos normas: SI (base 10, el que anuncia el fabricante) e IEC 80000-13 (base 2, el que suele calcular y mal-etiquetar el sistema operativo) — de ahí que un disco de 500 GB se muestre como ~465 GB.
 - Un dígito octal representa un conjunto completo de permisos `rwx` (3 bits). Los permisos se definen para propietario, grupo y otros.
 - El journaling protege la consistencia del sistema de archivos ante interrupciones, pero no sustituye a las copias de seguridad.
