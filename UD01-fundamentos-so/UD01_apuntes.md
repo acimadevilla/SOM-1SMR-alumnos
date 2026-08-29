@@ -365,9 +365,9 @@ Resuelve el resto por tu cuenta, aplicando el mismo método (no memorices result
 
 ---
 
-## 6. Sistemas transaccionales
+## 6. Sistemas transaccionales y tipos de sistemas de archivos
 
-### El problema que resuelven
+### El problema que resuelven los sistemas transaccionales
 
 Imagina que el ordenador se queda sin electricidad justo mientras se está escribiendo un archivo grande en el disco. Sin ningún mecanismo de protección, el sistema de archivos podría quedar en un estado inconsistente —corrupto—, con información a medio escribir y sin forma clara de saber qué se llegó a guardar y qué no.
 
@@ -379,9 +379,31 @@ Es una de las razones por las que los sistemas operativos actuales rara vez "se 
 
 **Importante:** el journaling protege la **consistencia del sistema de archivos**, no evita perder el contenido concreto que se estuviera escribiendo justo en el momento del corte, y **no sustituye a hacer copias de seguridad**. Son dos protecciones distintas que hacen falta las dos.
 
+### Panorama de tipos de sistemas de archivos actuales
+
+FAT32, NTFS, ext4 y HFS+/APFS no son "el mismo sistema con distinto nombre": cada uno resuelve el mismo problema —organizar y localizar datos en un disco— con decisiones de diseño distintas, y esas decisiones tienen consecuencias muy prácticas.
+
+| Sistema de archivos | SO donde es nativo | Journaling | Permisos tipo Unix (rwx) | Sensible a mayúsculas | Tamaño máx. de archivo (orden de magnitud) | Uso típico hoy |
+|---|---|---|---|---|---|---|
+| **FAT32** | Ninguno (el más universal) | No | No | No | 4 GB | Memorias USB, tarjetas SD — compatibilidad entre cualquier sistema |
+| **NTFS** | Windows | Sí | No (modelo propio de ACL, más granular) | No | Del orden de TB | Discos internos de equipos Windows |
+| **ext4** | Linux | Sí | Sí (nativos) | Sí | Del orden de TB | Discos internos de equipos Linux |
+| **HFS+ / APFS** | macOS | Sí (HFS+) / copy-on-write (APFS) | Sí | No por defecto | Varios EB | Discos internos de equipos macOS |
+
+Los tamaños máximos exactos varían según la implementación concreta — lo relevante no es memorizarlos con precisión de byte, sino entender **por qué existe esa diferencia**: FAT32 es un diseño de los años 90 pensado para tarjetas de memoria pequeñas; los sistemas modernos se diseñaron ya pensando en discos mucho mayores.
+
+Dos columnas de esta tabla conectan con contenido que ya has visto en esta unidad:
+
+- **Permisos tipo Unix**: es la explicación técnica de por qué un archivo puede "perder" sus permisos `rwx` al copiarlo a través de un sistema de archivos que no los soporta (FAT32/exFAT) — como en el caso práctico de cierre de esta unidad.
+- **Sensible a mayúsculas** (apartado 4): no es una propiedad de "Windows" o "Linux" en abstracto, es una propiedad del propio sistema de archivos.
+
 ### Para practicar
 
-**Actividad:** explica con tus propias palabras la diferencia entre que un sistema de archivos tenga journaling y que se hagan copias de seguridad periódicas, y por qué hacen falta las dos cosas.
+**Actividad (journaling):** explica con tus propias palabras la diferencia entre que un sistema de archivos tenga journaling y que se hagan copias de seguridad periódicas, y por qué hacen falta las dos cosas.
+
+**Actividad (elegir sistema de archivos):** si vas a formatear un pendrive que debe poder leerse tanto en un Windows como en un Mac como en una cámara de fotos, ¿qué sistema de archivos elegirías y por qué? ¿Y si ese mismo pendrive fuera a usarse solo para hacer copias de seguridad de una carpeta con scripts ejecutables de Linux?
+
+**Pista:** piensa qué requisito pesa más en cada caso — compatibilidad universal, o conservar permisos de ejecución — y qué fila de la tabla cumple ese requisito.
 
 ---
 
@@ -410,6 +432,7 @@ Con lo aprendido en esta unidad:
 - El byte tiene múltiplos según dos normas: SI (base 10, el que anuncia el fabricante) e IEC 80000-13 (base 2, el que suele calcular y mal-etiquetar el sistema operativo) — de ahí que un disco de 500 GB se muestre como ~465 GB.
 - Un dígito octal representa un conjunto completo de permisos `rwx` (3 bits). Los permisos se definen para propietario, grupo y otros.
 - El journaling protege la consistencia del sistema de archivos ante interrupciones, pero no sustituye a las copias de seguridad.
+- FAT32 (universal, sin journaling ni permisos Unix), NTFS (Windows), ext4 (Linux) y HFS+/APFS (macOS) son sistemas de archivos distintos, no intercambiables.
 
 ## Relación con RA y CE
 
