@@ -84,7 +84,15 @@ El sistema operativo cumple, de forma general, cuatro funciones:
 - **Gestión de archivos**: organiza y da acceso ordenado a la información guardada en el almacenamiento.
 - **Gestión de entrada/salida**: media entre las aplicaciones y los periféricos (teclado, ratón, impresora, red...).
 
-En esta unidad no vas a ver *cómo* decide el sistema operativo, por ejemplo, qué proceso ejecutar en cada instante (eso son los algoritmos de planificación) ni *cómo* calcula exactamente el reparto de la memoria — eso queda fuera del alcance de este curso. Lo importante aquí es que entiendas *qué* problema resuelve cada función.
+En esta unidad no vas a ver *cómo* decide el sistema operativo, por ejemplo, qué proceso ejecutar en cada instante (eso son los algoritmos de planificación) ni el detalle interno de cómo gestiona la memoria — eso queda fuera del alcance de este curso. Lo importante aquí es que entiendas *qué* problema resuelve cada función.
+
+### Cómo gestionan la memoria los sistemas actuales
+
+Los programas que tienes abiertos a la vez, sumados, suelen necesitar más memoria RAM de la que tiene instalada tu equipo — y aun así puedes tener docenas de aplicaciones abiertas sin que el sistema se caiga. La técnica que lo permite, usada tanto en **Windows 11** como en **Linux** actuales, se llama **paginación por demanda**.
+
+En vez de cargar un programa entero en RAM de golpe, el sistema operativo lo divide en bloques (páginas) y **solo carga en RAM las páginas que se están usando en cada momento**. Si hace falta una página que no está cargada, el sistema la trae desde el almacenamiento; si hace falta sitio en RAM, saca de ahí alguna página que no se esté usando, guardándola temporalmente en disco (lo que Windows llama "archivo de paginación" y Linux llama "swap").
+
+Esta es la razón real de por qué se pueden tener más aplicaciones abiertas de las que "caben" en la RAM instalada, y también de por qué el ordenador se ralentiza mucho cuando empieza a depender demasiado del disco para esto: el disco, incluso un SSD, es mucho más lento que la RAM.
 
 ### Arquitectura del sistema operativo por capas
 
@@ -393,6 +401,7 @@ Con lo aprendido en esta unidad:
 
 - Un sistema informático es hardware + software + usuarios; el software se divide en software de base y software de aplicación.
 - El sistema operativo se organiza por capas (núcleo, controladores, shell, aplicaciones) y cumple cuatro funciones: gestión de procesos, memoria, archivos y entrada/salida.
+- Windows 11 y Linux gestionan la memoria mediante paginación por demanda: solo cargan en RAM las páginas que se usan en cada momento, recurriendo al disco (paginación/swap) cuando hace falta más sitio.
 - La interfaz gráfica es la versión gráfica del shell, no una capa aparte ni el sistema operativo en sí.
 - Los núcleos pueden ser monolíticos (Linux), híbridos (Windows, macOS) o microkernel — son diseños distintos, no una jerarquía de calidad.
 - Un proceso es un programa en ejecución, con estados: nuevo, listo, ejecución, bloqueado, terminado.
