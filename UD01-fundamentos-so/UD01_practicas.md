@@ -134,6 +134,12 @@ Abre el Administrador de tareas de Windows (`Ctrl+Shift+Esc`) → pestaña Rendi
 
 Si cerraras ahora mismo todas las aplicaciones abiertas, ¿bajaría a cero el uso de RAM? ¿Por qué no?
 
+### Ejercicio 8 — 💻 Explora capa a capa en tu propio equipo
+
+Localiza en tu equipo, uno a uno, los cinco elementos de la tabla del ejercicio 6: núcleo (`winver` en Windows / `uname -r` en Linux), shell en texto (abre una terminal y ejecuta un comando), shell gráfico (tu propio escritorio), gestión de software (Store o `apt list --installed`) y controladores (Administrador de dispositivos).
+
+¿En qué capa pasas más tiempo tú, en tu día a día como usuario?
+
 ---
 
 ## Ficha 3 — Procesos y sus estados

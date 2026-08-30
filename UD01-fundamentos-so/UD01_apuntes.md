@@ -155,6 +155,18 @@ No existe una jerarquía de calidad entre estos tres modelos: son decisiones de 
 | Gestión de software | Instaladores .exe/.msi, Microsoft Store, winget | Gestores de paquetes (APT, DNF) |
 | Controladores | Suministrados por el fabricante, vía Windows Update o instalación manual | Suministrados por el fabricante o integrados en el propio núcleo |
 
+> **Vamos a practicar: explora capa a capa en tu propio equipo**
+>
+> Vas a comprobar, uno a uno, los elementos de la tabla anterior en el sistema que tengas delante:
+>
+> 1. **Núcleo.** En Windows, ejecuta `winver` (Inicio → escribe "winver") para ver la versión del núcleo NT. En Linux, ejecuta `uname -r` en una terminal.
+> 2. **Shell en texto.** Abre una terminal (PowerShell/CMD en Windows, o una terminal en Linux) y ejecuta un comando sencillo, por ejemplo `dir` o `ls`.
+> 3. **Shell gráfico.** Observa el propio escritorio que tienes delante — Explorador de Windows, o GNOME/KDE en Linux — e identifica que es, técnicamente, otra forma de shell, no una capa distinta.
+> 4. **Gestión de software.** En Windows, abre la Microsoft Store; en Linux, ejecuta `apt list --installed | wc -l` (o abre el gestor gráfico de paquetes) para ver cuántos paquetes tienes instalados.
+> 5. **Controladores.** Si ya hiciste la actividad del apartado 1 (Administrador de dispositivos), recupérala; si no, ábrelo ahora.
+>
+> **Reflexiona:** ¿has usado las cinco capas para completar esta actividad, o solo alguna? ¿En cuál pasas más tiempo tú, en tu día a día como usuario?
+
 ### Para practicar
 
 **Actividad:** para cada una de estas situaciones, indica en qué capa de la arquitectura del sistema operativo se soluciona el problema (núcleo, controladores, shell, aplicaciones): "el ordenador no reconoce una impresora nueva", "quieres escribir un comando para renombrar 200 archivos a la vez", "una aplicación se cierra sola de forma repetida", "el sistema reparte la CPU entre varios programas abiertos a la vez".
