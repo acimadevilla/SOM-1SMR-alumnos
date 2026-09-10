@@ -330,4 +330,79 @@ Una **carpeta compartida** es una carpeta de tu equipo anfitrión a la que la VM
 
 ---
 
-*(Resto de la unidad — epígrafe 6 — en desarrollo.)*
+## 6. Pruebas de rendimiento y cierre
+
+Hoy se cierra la unidad: toca medir con datos reales lo que hasta ahora solo se ha argumentado en teoría, y hacer una primera toma de contacto con una tecnología muy presente en el sector: los contenedores.
+
+### Pruebas de rendimiento básicas
+
+**Aviso:** aquí solo se miden benchmarks sencillos y puntuales — no se entra en herramientas de monitorización de procesos o servicios en marcha con detalle (eso llega con RA4).
+
+- **Tiempo de arranque:** cronometra cuánto tarda en arrancar cada VM (desde "Iniciar" hasta que el sistema está listo) y compáralo con el tiempo de arranque de tu propio equipo anfitrión.
+- **Velocidad de disco:** una prueba simple de lectura/escritura — `CrystalDiskMark` en Windows, o `dd` en Linux (`dd if=/dev/zero of=testfile bs=1M count=1024; sync`) — comparando el resultado dentro de la VM frente al mismo disco medido en el anfitrión.
+- **Interpreta el resultado, no solo lo anotes:** la VM va a rendir algo menos en ambas pruebas, casi siempre — es la confirmación con datos reales de lo que viste en el epígrafe 1: el hipervisor reparte el mismo hardware físico entre el anfitrión y la VM, así que ninguno de los dos accede al 100% de su capacidad.
+
+### Ampliación: introducción a Docker
+
+Un **contenedor** es una forma distinta —y más ligera— de aislar una aplicación y sus dependencias, sin virtualizar un hardware completo: a diferencia de una máquina virtual, que incluye su propio sistema operativo entero (con su propio núcleo), un contenedor **comparte el núcleo del sistema anfitrión**, y solo empaqueta la aplicación junto con lo que necesita para funcionar igual en cualquier equipo. Esto lo hace mucho más ligero y rápido de arrancar que una VM.
+
+**Docker** es la herramienta de contenedores más extendida hoy. No la vas a instalar ni practicar en esta unidad —es solo una introducción conceptual—, pero conviene que sepas que existe y en qué se diferencia de lo que acabas de aprender: es tecnología muy presente en el sector, y es probable que la veas con más detalle más adelante en el ciclo.
+
+### Caso práctico integrador
+
+Un cliente de la empresa donde haces la FP Dual te pide preparar un equipo con dos sistemas operativos (Windows y Linux), para que dos departamentos distintos puedan usarlo según necesiten sin arriesgar los datos de uno si el otro falla. Además, quiere que ambos sistemas puedan verse entre sí en red para compartir archivos, pero sin quedar expuestos directamente a Internet más de lo necesario. Con lo aprendido en esta unidad:
+
+1. ¿Instalarías esto como dual boot en un único equipo físico, o como dos máquinas virtuales independientes? Justifica con lo visto en el epígrafe 1.
+2. ¿Qué sistema de particionado usarías (MBR o GPT) y por qué?
+3. ¿Qué modo de red elegirías para que ambos sistemas se vean entre sí sin quedar expuestos directamente a Internet?
+4. Antes de entregar el equipo, ¿qué comprobarías respecto a actualizaciones y licencias?
+5. ¿Qué medida tomarías antes de hacer cualquier cambio arriesgado en un sistema ya configurado y entregado?
+
+### Para practicar
+
+**Actividad:** mide el tiempo de arranque y la velocidad de disco (lectura/escritura) de tus dos VMs y de tu equipo anfitrión, y complétalo en una tabla comparativa. Después, resuelve por escrito el caso práctico integrador de arriba.
+
+**Ejemplo resuelto (pregunta 2 del caso):** GPT, salvo que haya una razón concreta de compatibilidad con hardware muy antiguo — es el estándar actual y obligatorio si en algún momento se necesita Windows con Secure Boot.
+
+Resuelve el resto por tu cuenta, aplicando lo visto en cada epígrafe correspondiente.
+
+---
+
+## Resumen de la unidad
+
+- Una máquina virtual es un ordenador completo simulado por software, gestionado por un hipervisor (tipo 1, sobre el hardware directamente; tipo 2, sobre un sistema operativo ya en marcha).
+- Virtualizar tiene ventajas reales (aislamiento, snapshots, portabilidad, aprovechamiento del hardware) e inconvenientes reales (pérdida de rendimiento) — la decisión depende del caso de uso.
+- Antes de instalar cualquier sistema hay que planificar: idoneidad del hardware, selección del SO, MBR o GPT (con la partición ESP en GPT/UEFI), formato de disco virtual y modo de red.
+- La instalación sigue unos parámetros básicos comunes, con particularidades de cada fabricante (activación de Windows, cuentas Microsoft frente a locales).
+- El gestor de arranque (GRUB, Windows Boot Manager) decide qué sistema arranca; en dual boot sobre GPT/UEFI, ambos sistemas comparten la misma ESP y compiten por la prioridad de arranque en la NVRAM, no por "un sector".
+- Las incidencias de instalación son parte normal del oficio — lo importante es diagnosticar con método, no memorizar soluciones.
+- El software tiene distintos modelos de licencia (propietario con EULA, OEM, Retail, por volumen; software libre con las cuatro libertades; freeware) que no deben confundirse entre sí.
+- Tras instalar, hay que actualizar el sistema, tomar snapshots antes de cambios arriesgados (sin confundirlos con copias de seguridad reales) y configurar la red y la relación con el anfitrión según lo que se necesite.
+- Los modos de red de una VM dan visibilidad y conectividad distintas — la elección debe basarse en el caso de uso real.
+- Las pruebas de rendimiento confirman con datos reales que una VM rinde algo menos que el hardware real.
+- Los contenedores (Docker) son una alternativa más ligera a la virtualización completa, que comparte el núcleo del anfitrión — relevante en el sector, aunque fuera del contenido evaluable de esta unidad.
+
+## Relación con RA y CE
+
+| CE | Contenido | Dónde se trabaja |
+|---|---|---|
+| RA5-a | Máquina real vs. virtual, tipos de hipervisor | Apartado 1 |
+| RA5-b | Ventajas e inconvenientes de virtualizar | Apartado 1 |
+| RA5-c | Instalación del software de virtualización | Apartado 2 |
+| RA2-a *(refuerzo)* | Idoneidad del hardware | Apartado 3 |
+| RA2-b *(refuerzo)* | Selección del sistema operativo | Apartado 3 |
+| RA2-c + RA5-d | Plan de instalación (particionado, disco, red) | Apartado 3 |
+| RA2-d *(refuerzo)* | Parámetros básicos de instalación | Apartado 4 |
+| RA2-e *(refuerzo)* | Gestor de arranque, dual boot | Apartado 4 |
+| RA2-f *(refuerzo)* | Incidencias de instalación | Apartado 4 |
+| RA2-g *(refuerzo)* | Licencias de software | Apartado 4 |
+| RA2-h *(refuerzo)* | Actualización post-instalación | Apartado 5 |
+| RA5-e | Configuración de la VM (recursos, snapshots, red) | Apartado 5 |
+| RA5-f | Relación VM-anfitrión | Apartado 5 |
+| RA5-g | Pruebas de rendimiento | Apartado 6 |
+
+> Recuerda: los CE de RA2 marcados como "refuerzo" se evalúan oficialmente en tu empresa, durante la fase de FP Dual (mayo–10 junio) — aquí los practicas sobre máquina virtual para llegar con soltura a ese momento.
+
+---
+
+*(UD02 completa: 6 epígrafes desarrollados.)*
