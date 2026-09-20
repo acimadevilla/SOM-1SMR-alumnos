@@ -169,6 +169,24 @@ Se recomienda identificar el dispositivo por su **UUID** (un identificador únic
 >
 > **Ejemplo resuelto:** `blkid` devuelve `/root/disco_prueba.img: UUID="1a2b3c4d-5e6f-..." TYPE="ext4"`. La línea añadida a `fstab` queda `UUID=1a2b3c4d-5e6f-... /mnt/prueba ext4 loop 0 2`. Tras `sudo mount -a`, `df -h` muestra `/mnt/prueba` en la lista sin haberlo montado manualmente.
 
+### La excepción a la regla del UUID: el swap
+
+En UD01 viste que Linux usa **swap** para la paginación por demanda, cuando la RAM no basta. Si echas un vistazo a tu propio `/etc/fstab`, vas a encontrar una línea para el swap que **no sigue la recomendación de usar UUID** — algo así:
+
+```
+/swapfile none swap sw 0 0
+```
+
+La razón es que, desde hace varias versiones, Ubuntu ya no crea una **partición** de swap dedicada: crea un **archivo**, `/swapfile`, dentro del propio sistema de archivos raíz — exactamente el mismo mecanismo que el `pagefile.sys` de Windows que se mencionó en UD01, solo que con otro nombre. Como no es una partición identificable con `blkid`, sino un archivo más dentro de `/`, en `fstab` se indica por su ruta directamente, sin UUID.
+
+¿Por qué el cambio? Tres motivos prácticos: un particionado más simple (cambiar el tamaño del swap ya no exige tocar el esquema de particiones, basta con recrear el archivo), mejor integración con el cifrado de disco (un archivo de swap dentro de una partición ya cifrada queda cifrado automáticamente, sin gestión aparte) y porque la diferencia de rendimiento que antes hacía preferible una partición dedicada ha desaparecido casi por completo con los kernels actuales. Sigue siendo posible crear una partición de swap tradicional si se prefiere — ya no es la opción por defecto, pero no ha desaparecido como posibilidad.
+
+> **Vamos a practicar: localiza tu propio swap**
+>
+> `swapon --show` y `free -h` — comprueba cuánto swap tiene tu sistema y de dónde procede. Después, busca la línea correspondiente en tu `/etc/fstab` con `cat /etc/fstab`.
+>
+> **Reflexiona:** ¿por qué esta línea concreta no representa ningún riesgo de los que hemos visto con el UUID (el problema de que `/dev/sdaX` pueda cambiar de nombre entre arranques)?
+
 ### Cuando el arranque falla: no es el fin del mundo
 
 Un error de sintaxis en `/etc/fstab` puede hacer que el sistema no complete su arranque con normalidad, y entre en un **modo de emergencia** (`emergency.target` de systemd) o en el modo de recuperación del menú avanzado de GRUB, que ya viste por encima en UD02. Es importante que interiorices esto: **no se ha perdido ningún dato**, el sistema simplemente no puede continuar hasta que se corrija la configuración que le impide montar correctamente todo lo que tiene indicado.
