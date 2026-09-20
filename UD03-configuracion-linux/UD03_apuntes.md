@@ -226,15 +226,26 @@ Añadir un PPA equivale a confiar en quien lo mantiene — exactamente el mismo 
 - `apt purge <paquete>` lo desinstala y **también elimina esos archivos de configuración**.
 - `apt autoremove` limpia paquetes que quedaron instalados solo como dependencia de otro, y que ya no necesita ningún paquete instalado.
 
-> **Vamos a practicar: `remove` frente a `purge`**
+### Snap: otro gestor de paquetes en Ubuntu
+
+Además de APT, Ubuntu incluye **Snap**, el gestor de paquetes propio de Canonical. La diferencia clave es que un paquete Snap va **autocontenido**: empaqueta sus propias dependencias en vez de compartir las del sistema, así que el mismo `.snap` funciona igual en distintas versiones de Ubuntu — a cambio de ocupar más espacio en disco y de un cierto aislamiento (*sandboxing*) respecto al resto del sistema, que limita el acceso a partes sensibles como el propio gestor de arranque.
+
+`snap install <paquete>` instala; `snap list` muestra lo que tienes instalado, con su versión y canal de actualización; `snap remove <paquete>` desinstala; `snap remove --purge <paquete>` además borra los datos guardados de la aplicación — el mismo paralelismo que ya viste entre `apt remove` y `apt purge`. **APT y Snap conviven sin problema en el mismo sistema**: no hay que elegir uno u otro.
+
+> **Vamos a practicar: instala aplicaciones reales con APT y con Snap**
 >
-> **Paso a paso:**
+> **Paso a paso, en tu terminal:**
 >
-> 1. `sudo apt remove tree` — desinstala `tree`, conservando su configuración (si la tuviera).
-> 2. `dpkg -l | grep tree` — comprueba que sigue apareciendo como "rc" (residual config), no completamente limpio.
-> 3. `sudo apt purge tree` — ahora sí, desinstálalo por completo.
-> 4. `dpkg -l | grep tree` — comprueba que ya no aparece ninguna traza.
-> 5. `sudo apt autoremove` — limpia cualquier dependencia huérfana que haya podido quedar.
+> 1. `sudo apt install refind` — instala rEFInd, un gestor de arranque gráfico alternativo, directamente desde el repositorio oficial de Ubuntu.
+> 2. `dpkg -l | grep refind` — comprueba que aparece instalado ("ii").
+> 3. `sudo add-apt-repository ppa:danielrichter2007/grub-customizer` y `sudo apt update` — añade un PPA (repositorio de terceros) que ofrece GRUB Customizer, una herramienta gráfica para editar el menú de GRUB.
+> 4. `sudo apt install grub-customizer` — instálalo. **Si el PPA no tiene paquetes disponibles para tu versión de Ubuntu, apt te lo dirá con un error** — documenta ese resultado tal cual, es un ejemplo real de por qué conviene comprobar la fiabilidad de un PPA antes de depender de él, y sigue con el resto de la práctica.
+> 5. `sudo snap install vlc` — instala VLC, un reproductor multimedia, esta vez a través de Snap.
+> 6. `snap list vlc` — comprueba que aparece instalado, con su versión y canal.
+> 7. `sudo apt remove refind` seguido de `dpkg -l | grep refind` (verás "rc", configuración residual) y después `sudo apt purge refind` (comprueba que ya no queda ninguna traza).
+> 8. `sudo snap remove --purge vlc` — desinstala VLC por completo.
+>
+> **Reflexiona:** ¿por qué crees que una herramienta como GRUB Customizer o rEFInd —que necesitan tocar directamente el gestor de arranque del sistema— casi nunca se distribuyen como Snap?
 
 ### Instalar un `.deb` suelto
 
@@ -271,24 +282,40 @@ En la familia de distribuciones Fedora/RHEL, el gestor de paquetes equivalente a
 
 Editar archivos de configuración a mano —como acabas de hacer con `/etc/fstab`— es potente, pero propenso a errores. Un **asistente de configuración** es una herramienta, gráfica o de texto interactivo, que guía paso a paso una configuración compleja ofreciendo solo opciones válidas y comprobando automáticamente lo que introduces, reduciendo así el margen de error a cambio de algo menos de control fino.
 
-### Red: NetworkManager, `nmcli` y `nmtui`
+### Red: NetworkManager, desde el entorno gráfico y desde la terminal
 
-**NetworkManager** es el servicio que gestiona de forma centralizada las conexiones de red en Ubuntu. Puedes acceder a él de tres formas: desde el applet gráfico del escritorio, desde `nmtui` (una interfaz de texto interactiva, tipo menú, cómoda para una configuración puntual) o desde `nmcli` (línea de comandos pura, pensada para usarse dentro de scripts y tareas automatizadas — la volverás a ver relacionada con el epígrafe 6).
+**NetworkManager** es el servicio que gestiona de forma centralizada las conexiones de red en Ubuntu. Puedes acceder a él de tres formas: desde el applet gráfico del escritorio (Configuración → Red), desde `nmtui` (una interfaz de texto interactiva, tipo menú, cómoda para una configuración puntual) o desde `nmcli` (línea de comandos pura, pensada para usarse dentro de scripts y tareas automatizadas — la volverás a ver relacionada con el epígrafe 6).
 
-Por debajo de todo esto, Ubuntu usa **Netplan** como capa de configuración declarativa (archivos `.yaml` en `/etc/netplan/`) que NetworkManager o systemd-networkd se encargan de aplicar — no necesitas tocarlo directamente para el trabajo habitual, pero conviene que sepas que existe.
+### Netplan y NetworkManager: quién manda realmente
 
-> **Vamos a practicar: consulta y cambia tu configuración de red**
+Es una pregunta muy razonable en cuanto oyes hablar de Netplan: "entonces, ¿la IP estática se configura editando el archivo de Netplan?". En un **Ubuntu de escritorio** —el caso de tu VM— la respuesta es **no, no directamente**. El archivo de Netplan (`/etc/netplan/*.yaml`) suele contener una sola línea relevante, `renderer: NetworkManager`, que le dice a Netplan "no gestiones tú las interfaces, delega en NetworkManager". La configuración real de cada conexión vive en NetworkManager (concretamente en `/etc/NetworkManager/system-connections/`), y es a NetworkManager a quien hablan tanto el asistente gráfico como `nmcli`/`nmtui`.
+
+En un **Ubuntu Server** la situación es distinta: ahí sí es habitual editar directamente el `.yaml` de Netplan y aplicar con `sudo netplan apply`, porque normalmente delega en `systemd-networkd` en vez de en NetworkManager. "Netplan" no es una única forma de hacer las cosas: es una capa que puede apoyarse en herramientas distintas según el tipo de instalación.
+
+> **Vamos a practicar: configura una IP estática, primero desde el escritorio**
 >
-> **Paso a paso, en tu terminal:**
+> **Paso a paso:**
 >
-> 1. `nmcli connection show` — lista las conexiones configuradas y su estado.
-> 2. `nmcli device status` — muestra el estado de cada interfaz de red.
-> 3. `sudo nmtui` — abre el asistente de texto; entra en "Editar una conexión", selecciona la tuya y cambia el método IPv4 de "Automático" a "Manual", introduciendo una dirección dentro del rango que permite el modo de red de tu VM (visto en UD02).
-> 4. Guarda los cambios y reactiva la conexión (`nmcli connection up <nombre>` si no se aplica sola).
-> 5. `ping -c 4 <IP del anfitrión o de otra VM>` — comprueba que tienes conectividad con la nueva configuración.
-> 6. Repite el proceso, esta vez para volver a DHCP.
+> 1. Abre **Configuración → Red** (o Wifi, según tu conexión), pulsa el icono de engranaje de tu conexión y entra en la pestaña **IPv4**.
+> 2. Cambia el método de "Automático (DHCP)" a "Manual", e introduce una dirección IP, máscara y puerta de enlace dentro del rango que permite el modo de red de tu VM (visto en UD02). Aplica los cambios.
+> 3. `ip addr show` — comprueba en la terminal que la IP nueva se ha aplicado.
+> 4. Desde tu **VM Windows 11** (la que instalaste en UD02), abre una terminal (`cmd`) y ejecuta `ping <la IP que acabas de fijar>`. Documenta con una captura que responde correctamente.
+> 5. Vuelve a **Configuración → Red → IPv4** y cambia el método de nuevo a "Automático (DHCP)".
 >
-> **Reflexiona:** ¿qué modo de red de VirtualBox (de los que viste en UD02: NAT, Red NAT, Adaptador puente, Solo anfitrión, Red interna) es imprescindible para que la IP estática que has configurado tenga sentido, y por qué? No te quedes en "hace falta tener red": explica la relación concreta entre el modo elegido en VirtualBox y la configuración que acabas de hacer dentro del sistema operativo.
+> **Reflexiona:** para que el `ping` del paso 4 funcione, las dos VMs (Linux y Windows) tienen que "verse" en red. ¿Qué modo de red de VirtualBox (de los que viste en UD02: NAT, Red NAT, Adaptador puente, Solo anfitrión, Red interna) es imprescindible para esto, y por qué el NAT simple no serviría?
+
+> **Vamos a practicar: la misma IP estática, ahora desde la terminal**
+>
+> **Paso a paso:**
+>
+> 1. `nmcli connection show` — anota el nombre exacto de tu conexión.
+> 2. `nmcli connection modify "<nombre-de-tu-conexión>" ipv4.method manual ipv4.addresses "<IP>/<prefijo>" ipv4.gateway "<puerta-de-enlace>" ipv4.dns "8.8.8.8"` — fija la misma IP que usaste desde el escritorio (sustituye cada valor por el tuyo).
+> 3. `nmcli connection up "<nombre-de-tu-conexión>"` — aplica el cambio.
+> 4. `ip addr show` — comprueba que coincide con la IP que fijaste antes a mano.
+> 5. Repite el `ping` desde tu VM Windows 11 y comprueba que responde igual que la primera vez.
+> 6. `cat /etc/netplan/*.yaml` — localiza la línea que indica quién gestiona realmente tu red.
+>
+> **Reflexiona:** ¿por qué el archivo de Netplan que acabas de ver no contiene tu IP estática, si es supuestamente el sistema de configuración de red de Ubuntu? ¿Dónde está realmente guardada esa configuración?
 
 ### Dispositivos: impresoras y Bluetooth
 
@@ -336,6 +363,52 @@ Otra buena práctica: redirigir la salida del script a un archivo de registro (`
 > 5. Espera 2-3 minutos y ejecuta `cat /home/tu_usuario/registro.log` — deberías ver varias líneas nuevas, una por minuto.
 > 6. `crontab -e` de nuevo y elimina (o comenta con `#` delante) esa línea, para que no siga ejecutándose sin necesidad.
 
+### Más allá de "todos los días": otros patrones de temporalidad
+
+El campo de día-de-la-semana admite rangos: `1-5` significa "de lunes a viernes" (el 0 y el 7 son ambos domingo), así que `0 9 * * 1-5` es "todos los días laborables a las 9:00".
+
+¿Y si quieres algo que no encaja directamente en la sintaxis de `cron`, como "en semanas alternas"? No existe un campo para eso — la solución habitual es programar la tarea con la periodicidad más fina que sí soporta `cron` (por ejemplo, cada domingo) y añadir, dentro de la misma línea, una comprobación de la semana ISO del año (`date +%V`) que descarte la mitad de las ejecuciones:
+
+```
+0 3 * * 0 [ $(( $(date +\%V) \% 2 )) -eq 0 ] && /home/tu_usuario/backup_personal.sh
+```
+
+**Aviso de sintaxis importante:** dentro de una línea de `crontab`, el carácter `%` tiene un significado especial (equivale a un salto de línea) — si quieres usarlo literalmente, como en `date +%V`, tienes que escaparlo como `\%`. Es un error de sintaxis muy fácil de cometer y que hace que la tarea no funcione como esperas, sin dar ningún aviso claro del motivo.
+
+> **Vamos a practicar: tres tareas con temporalidades distintas**
+>
+> Tu profesor o profesora te va a facilitar un script `backup_personal.sh` que hace una copia de seguridad de tu carpeta personal. Vas a programar, junto a él, otros dos scripts que vas a escribir tú, cada uno con una temporalidad distinta.
+>
+> **Paso a paso:**
+>
+> 1. Copia `backup_personal.sh` a tu carpeta personal y dale permisos de ejecución (`chmod +x`). Pruébalo una vez a mano para comprobar que funciona.
+> 2. `crontab -e` y añade la línea de copia en semanas alternas (usa la que tienes más arriba, cambiando la ruta por la tuya y sin olvidar escapar el `%`).
+> 3. Crea un script `saludo.sh` con este contenido (cambiando `tu_usuario` por el tuyo):
+>    ```bash
+>    #!/bin/bash
+>    echo "¡Hola $(whoami)! Son las $(date +%H:%M) del $(date +%A)." >> /home/tu_usuario/saludo.log
+>    ```
+> 4. Dale permisos de ejecución y prográmalo para que se ejecute **solo los días laborables** a una hora de tu elección: `0 9 * * 1-5 /home/tu_usuario/saludo.sh`.
+> 5. Documenta, con capturas, las tres líneas de tu `crontab -l` completo (registro de prueba ya eliminado, backup en semanas alternas, saludo en días laborables).
+>
+> **Reflexiona:** el crontab del ejercicio 2 se ejecuta técnicamente **todos** los domingos, no en semanas alternas. Entonces, ¿dónde está exactamente la lógica que hace que el backup real solo se ejecute la mitad de esas veces?
+
+### La tarea que necesita privilegios: el crontab de root
+
+No todo lo que quieras automatizar lo puede hacer tu propio usuario. **Apagar el sistema**, por ejemplo, requiere privilegios de administrador — si programas esa tarea en tu propio `crontab -e`, fallará por falta de permisos. Las tareas que necesitan privilegios de administrador deben programarse en el **crontab de root**, que se edita con `sudo crontab -e` (un crontab completamente distinto al tuyo, no una versión "con sudo" del mismo).
+
+> **Vamos a practicar: programa un apagado automático**
+>
+> **Paso a paso:**
+>
+> 1. `sudo crontab -e` — abre el crontab de **root**, no el tuyo.
+> 2. Para comprobar que el mecanismo funciona sin esperar de verdad a una hora concreta, añade primero una línea con una hora dentro de 1-2 minutos: `<minuto> <hora> * * * /usr/sbin/shutdown -h now` (sustituye por la hora exacta de dentro de un par de minutos). **Guarda cualquier trabajo abierto antes de este paso: la VM se va a apagar de verdad.**
+> 3. Espera a que llegue la hora y comprueba que la VM se apaga sola. Vuelve a encenderla desde VirtualBox.
+> 4. `sudo crontab -e` de nuevo, y cambia la hora a la definitiva: las 14:55 de todos los días (`55 14 * * * /usr/sbin/shutdown -h now`).
+> 5. `sudo crontab -l` — documenta con una captura que la línea queda guardada en el crontab de root.
+>
+> **Reflexiona:** si hubieras añadido esa misma línea en tu propio `crontab -e` (sin `sudo`) en vez de en el de root, ¿qué crees que habría pasado a la hora programada?
+
 ### `at`: una sola vez, en un momento concreto
 
 A diferencia de `cron`, **`at`** programa una tarea para que se ejecute **una única vez**, en un momento futuro que tú indicas: escribes `at 18:00`, introduces el comando (o comandos) y confirmas con Ctrl+D. `atq` lista las tareas pendientes; `atrm <id>` cancela una.
@@ -375,9 +448,10 @@ Con lo aprendido en esta unidad:
 - Un error en `fstab` puede impedir el arranque normal, pero es recuperable sin perder datos: el modo de emergencia o el de recuperación de GRUB permiten diagnosticar y corregir.
 - `apt update` refresca el índice de paquetes disponibles; `apt upgrade` instala las actualizaciones — no son lo mismo.
 - `remove` desinstala un paquete conservando su configuración; `purge` la elimina también. Un `.deb` suelto se instala con `dpkg -i`, resolviendo dependencias rotas con `apt --fix-broken install`.
+- Snap es otro gestor de paquetes de Ubuntu, con paquetes autocontenidos; convive con APT sin conflicto, y tiene su propio `remove`/`remove --purge`.
 - DNF y `.rpm` son el equivalente de APT y `.deb` en la familia Fedora/RHEL.
-- NetworkManager (`nmcli`/`nmtui`) y los asistentes de dispositivos simplifican configuraciones que también podrían hacerse a mano, reduciendo el margen de error.
-- `cron` programa tareas repetitivas; `at`, tareas puntuales de una sola vez. Las rutas dentro de un script programado deben ser siempre absolutas.
+- NetworkManager (desde el entorno gráfico, `nmtui` o `nmcli`) y los asistentes de dispositivos simplifican configuraciones que también podrían hacerse a mano; en un Ubuntu de escritorio, es Netplan quien delega en NetworkManager, no al revés.
+- `cron` programa tareas repetitivas —también con patrones como días laborables o semanas alternas— y necesita el crontab de root para tareas que requieren privilegios de administrador; `at`, tareas puntuales de una sola vez. Las rutas dentro de un script programado deben ser siempre absolutas.
 
 ## Relación con RA y CE
 
