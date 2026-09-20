@@ -16,6 +16,8 @@ Al terminar esta unidad debes ser capaz de:
 - Usar asistentes de configuración de red y dispositivos.
 - Automatizar tareas del sistema con `cron` y `at`.
 
+**Cómo está pensada esta unidad:** cada vez que aparezca un comando nuevo, vas a encontrar un cuadro **"Vamos a practicar"** con dos partes: primero una guía **paso a paso** con lo que tienes que escribir literalmente en tu terminal, para que compruebes con tus propios ojos qué hace ese comando; después, una tarea algo más abierta que te obliga a razonar, no solo a copiar. Haz siempre la parte guiada antes de pasar a la abierta — es la forma de que el comando se te quede grabado de verdad.
+
 ---
 
 ## 1. Arranque y sesiones
@@ -54,15 +56,19 @@ Es un error muy habitual mezclar estos cuatro conceptos:
 - **Apagar** (`systemctl poweroff` o `shutdown -h now`): el equipo se apaga por completo.
 - **Reiniciar** (`systemctl reboot`): el equipo se apaga y vuelve a arrancar.
 
-### Para practicar
-
-**Actividad:** sobre tu VM Ubuntu, consulta el target de arranque por defecto, cámbialo temporalmente a modo texto y vuelve al modo gráfico sin reiniciar. Después, consulta con `journalctl -b` los mensajes del arranque actual y localiza la línea en la que se menciona el sistema de archivos raíz montándose.
-
-**Ejemplo resuelto:** `systemctl get-default` → `graphical.target`. `systemctl isolate multi-user.target` → la pantalla pasa a modo texto. `systemctl isolate graphical.target` → vuelve el escritorio, sin haber reiniciado en ningún momento.
-
-> **Vamos a practicar: sesiones activas en tu propio sistema**
+> **Vamos a practicar: cambia de target y consulta el registro de arranque**
 >
-> Ejecuta `loginctl list-sessions` en tu VM Ubuntu y localiza cuál es tu sesión actual. Después, responde por escrito: ¿qué diferencia real hay, a nivel de systemd, entre `multi-user.target` y `graphical.target`? No te quedes en "uno tiene interfaz gráfica y el otro no": explica la relación de dependencia entre ambos.
+> **Paso a paso, en tu terminal:**
+>
+> 1. `systemctl get-default` — anota el resultado (debería ser `graphical.target`).
+> 2. `sudo systemctl isolate multi-user.target` — la pantalla debería quedarse en modo texto.
+> 3. Inicia sesión con tu usuario y contraseña en esa terminal de texto, y ejecuta `whoami` para comprobar que sigues siendo el mismo usuario que en el escritorio.
+> 4. `sudo systemctl isolate graphical.target` — recuperas el entorno gráfico, sin haber reiniciado en ningún momento.
+> 5. `journalctl -b | less` — despliega el registro del arranque actual (usa las flechas para moverte, `q` para salir) y localiza alguna línea relacionada con el montaje del sistema de archivos raíz.
+> 6. `loginctl list-sessions` — anota el ID de tu sesión.
+> 7. `loginctl show-session <ID>` (sustituyendo `<ID>` por el que acabas de anotar) — observa la información detallada que te da: usuario, tipo de sesión, estado.
+>
+> **Reflexiona:** explica, en tus propias palabras, qué diferencia real hay a nivel de systemd entre `multi-user.target` y `graphical.target`. No te quedes en "uno tiene interfaz gráfica y el otro no": explica la relación de dependencia entre ambos targets.
 
 ---
 
@@ -93,15 +99,27 @@ Aquí está la parte que más sorprende la primera vez: **puedes tener varios en
 
 Instalar un segundo entorno se hace igual que instalar cualquier otro software, con el gestor de paquetes que verás formalizado en el epígrafe 4: por ejemplo, `sudo apt install xubuntu-desktop` instala XFCE completo, con su conjunto de aplicaciones por defecto (el paquete `xfce4`, más minimalista, instala solo el núcleo del entorno sin esas aplicaciones añadidas).
 
-### Para practicar
-
-**Actividad:** instala un segundo entorno de escritorio en tu VM Ubuntu (XFCE, KDE Plasma o MATE, según se te indique), usando el meta-paquete completo. Cierra sesión y, desde la pantalla de inicio, entra con el nuevo entorno.
-
-**Ejemplo resuelto:** tras `sudo apt install xubuntu-desktop` y reiniciar la sesión, en la pantalla de login aparece un icono de engranaje junto al campo de contraseña; al pulsarlo, se despliega la lista de sesiones disponibles (GNOME y XFCE), y eliges la que quieras usar en ese inicio de sesión concreto.
+> **Vamos a practicar: instala y elige un segundo entorno de escritorio**
+>
+> **Paso a paso, en tu terminal:**
+>
+> 1. `sudo apt update` — deja el índice de paquetes al día antes de instalar nada (lo verás en detalle en el apartado 4).
+> 2. `sudo apt install xubuntu-desktop` (o el meta-paquete que se te indique: `kubuntu-desktop` para KDE Plasma, `ubuntu-mate-desktop` para MATE) — tardará varios minutos, es una instalación grande con muchos paquetes.
+> 3. Cuando termine, cierra la sesión desde el menú del escritorio (**no apagues la VM**).
+> 4. En la pantalla de inicio de sesión, busca el icono de engranaje junto al campo de contraseña, y comprueba que aparecen ya las dos sesiones disponibles.
+> 5. Entra con el nuevo entorno de escritorio.
+>
+> **Ejemplo resuelto:** tras `sudo apt install xubuntu-desktop` y reiniciar la sesión, en la pantalla de login aparece un icono de engranaje junto al campo de contraseña; al pulsarlo, se despliega la lista de sesiones disponibles (GNOME y XFCE), y eliges la que quieras usar en ese inicio de sesión concreto.
 
 > **Vamos a practicar: personaliza y compara**
 >
-> Dentro de cada uno de tus dos entornos de escritorio, localiza dónde se cambian el fondo de pantalla, el tema y los iconos (por ejemplo, "Ajustes" en GNOME frente a "Configuración del sistema" en KDE Plasma), y personaliza al menos dos aspectos en cada uno. Después, compara cuánta memoria RAM consume cada entorno recién iniciado (puedes usar el monitor de recursos gráfico) y completa una tabla con: RAM en reposo, primera impresión visual, y dónde está la configuración de personalización en cada uno.
+> **Paso a paso:**
+>
+> 1. En tu entorno original (por ejemplo, GNOME), abre "Ajustes" y cambia el fondo de pantalla y el tema.
+> 2. Cierra sesión, entra con el segundo entorno, y localiza su panel de configuración equivalente (por ejemplo, "Configuración del sistema" en KDE Plasma, o el "Gestor de configuración" en XFCE).
+> 3. Cambia también ahí el fondo de pantalla y el tema.
+> 4. Abre el monitor de recursos (o el gestor de tareas gráfico) en cada sesión, y anota cuánta RAM usa el sistema recién iniciado en cada una.
+> 5. Completa una tabla con: RAM en reposo, primera impresión visual, y dónde está la configuración de personalización en cada entorno.
 >
 > **Reflexiona:** si desinstalaras ahora mismo el entorno que no estás usando, ¿qué riesgo real correrías? ¿Por qué es más seguro simplemente no usarlo que desinstalarlo?
 
@@ -111,7 +129,24 @@ Instalar un segundo entorno se hace igual que instalar cualquier otro software, 
 
 ### Montar un sistema de archivos, paso a paso
 
-"Montar" un dispositivo o partición significa asociarlo a un punto concreto del árbol de directorios, para poder acceder a su contenido a través de esa ruta. `mount` monta manualmente (por ejemplo, `sudo mount /dev/sdb1 /mnt`); `umount` desmonta. Los puntos de montaje típicos para dispositivos externos son `/mnt` y `/media`.
+"Montar" un dispositivo o partición significa asociarlo a un punto concreto del árbol de directorios, para poder acceder a su contenido a través de esa ruta. `mount` monta manualmente; `umount` desmonta. Los puntos de montaje típicos para dispositivos externos son `/mnt` y `/media`.
+
+No necesitas un disco físico nuevo para practicar esto: puedes crear un archivo que **actúe como si fuera un disco** (una técnica real y muy habitual para pruebas, llamada montaje *loopback*), formatearlo con un sistema de archivos y montarlo exactamente igual que montarías un disco de verdad.
+
+> **Vamos a practicar: monta un "disco" de prueba a mano**
+>
+> **Paso a paso, en tu terminal:**
+>
+> 1. `dd if=/dev/zero of=/root/disco_prueba.img bs=1M count=100` — crea un archivo de 100 MB que va a hacer de disco.
+> 2. `sudo mkfs.ext4 /root/disco_prueba.img` — lo formatea con el sistema de archivos ext4 (el mismo que usa tu VM).
+> 3. `sudo mkdir /mnt/prueba` — crea el punto de montaje.
+> 4. `sudo mount -o loop /root/disco_prueba.img /mnt/prueba` — lo monta manualmente, como si fuera un disco real.
+> 5. `df -h | grep prueba` — comprueba que aparece montado, con su tamaño y espacio disponible.
+> 6. `echo "hola" | sudo tee /mnt/prueba/saludo.txt` — crea un archivo dentro.
+> 7. `sudo umount /mnt/prueba` — desmóntalo.
+> 8. `ls /mnt/prueba` — comprueba que la carpeta aparece vacía.
+>
+> **Reflexiona:** el archivo `saludo.txt` no se ha borrado — sigue existiendo dentro de `disco_prueba.img`. Entonces, ¿por qué "desaparece" de `/mnt/prueba` en cuanto desmontas? ¿Qué te dice esto sobre lo que significa realmente "montar" algo?
 
 ### `/etc/fstab`: qué se monta solo en cada arranque
 
@@ -121,13 +156,22 @@ Montar a mano cada vez que arrancas sería muy poco práctico para los discos qu
 <dispositivo>  <punto de montaje>  <tipo de sistema de archivos>  <opciones>  <dump>  <pass>
 ```
 
-Se recomienda identificar el dispositivo por su **UUID** (un identificador único y estable para esa partición concreta) en vez de por su nombre (`/dev/sdaX`). La razón es puramente práctica: el nombre de dispositivo puede cambiar entre arranques si se añaden o quitan discos, mientras que el UUID no cambia nunca. El comando `blkid` muestra el UUID de cada partición del sistema.
+Se recomienda identificar el dispositivo por su **UUID** (un identificador único y estable para esa partición o archivo concreto) en vez de por su nombre de dispositivo. La razón es puramente práctica: un nombre como `/dev/sdaX` puede cambiar entre arranques si se añaden o quitan discos, mientras que el UUID no cambia nunca. El comando `blkid` muestra el UUID de una partición o de un archivo de imagen como el que acabas de crear.
+
+> **Vamos a practicar: monta tu disco de prueba automáticamente**
+>
+> **Paso a paso:**
+>
+> 1. `sudo blkid /root/disco_prueba.img` — anota el UUID que te devuelve.
+> 2. `sudo nano /etc/fstab` y añade al final la línea `UUID=<tu-uuid> /mnt/prueba ext4 loop 0 2` (sustituyendo `<tu-uuid>` por el UUID real que has anotado).
+> 3. `sudo mount -a` — aplica `fstab` sin reiniciar, y comprueba con `df -h` que tu disco de prueba se ha montado solo.
+> 4. Reinicia la VM y, tras el arranque, comprueba de nuevo con `df -h | grep prueba` que sigue montado sin que hayas tenido que montarlo tú.
+>
+> **Ejemplo resuelto:** `blkid` devuelve `/root/disco_prueba.img: UUID="1a2b3c4d-5e6f-..." TYPE="ext4"`. La línea añadida a `fstab` queda `UUID=1a2b3c4d-5e6f-... /mnt/prueba ext4 loop 0 2`. Tras `sudo mount -a`, `df -h` muestra `/mnt/prueba` en la lista sin haberlo montado manualmente.
 
 ### Cuando el arranque falla: no es el fin del mundo
 
 Un error de sintaxis en `/etc/fstab` puede hacer que el sistema no complete su arranque con normalidad, y entre en un **modo de emergencia** (`emergency.target` de systemd) o en el modo de recuperación del menú avanzado de GRUB, que ya viste por encima en UD02. Es importante que interiorices esto: **no se ha perdido ningún dato**, el sistema simplemente no puede continuar hasta que se corrija la configuración que le impide montar correctamente todo lo que tiene indicado.
-
-El procedimiento habitual es: leer el mensaje de error que muestra la shell de emergencia (suele indicar exactamente qué línea o qué dispositivo ha fallado), acceder con la contraseña de administración, editar `/etc/fstab` con un editor de texto en terminal (`nano` o `vi`) para corregir el error, y reiniciar de nuevo para comprobar.
 
 **Aviso importante, relacionado con lo visto en UD01 sobre journaling:** el journaling de ext4 protege la consistencia del sistema de archivos ante cortes de luz o interrupciones bruscas — pero **no protege de un error humano de configuración** como un `fstab` mal escrito. Son dos problemas de naturaleza completamente distinta, y confundirlos es un error conceptual habitual.
 
@@ -135,17 +179,18 @@ El procedimiento habitual es: leer el mensaje de error que muestra la shell de e
 
 Si el problema no es `fstab` sino el propio gestor de arranque (una situación que ya viste en UD02 con el dual boot), el procedimiento estándar es más laborioso: arrancar desde un live USB, montar la partición raíz del sistema instalado, montar también dentro `/dev`, `/proc` y `/sys`, hacer `chroot` a ese sistema montado (una forma de "entrar" en él como si fuera el sistema en marcha) y ejecutar `grub-install` y `update-grub` desde dentro. Tu profesor o profesora te lo mostrará en directo, ya que es un procedimiento con muchos pasos.
 
-### Para practicar
-
-**Actividad:** añade un disco o partición adicional a `/etc/fstab`, identificándolo por su UUID, y comprueba que se monta sin reiniciar con `sudo mount -a`.
-
-**Ejemplo resuelto:** `blkid` muestra `/dev/sdb1: UUID="1a2b3c4d-..." TYPE="ext4"`. Se añade a `/etc/fstab` la línea `UUID=1a2b3c4d-... /mnt/datos ext4 defaults 0 2`. Tras `sudo mkdir -p /mnt/datos && sudo mount -a`, el disco aparece montado en `/mnt/datos` sin necesidad de reiniciar.
-
 > **Vamos a practicar: rompe y repara `fstab`, de forma controlada**
 >
-> Antes de nada, toma una instantánea de tu VM con el nombre "Antes de romper fstab" — es exactamente el tipo de cambio arriesgado para el que aprendiste a usar snapshots en UD02.
+> **Paso a paso:**
 >
-> Provoca deliberadamente un error de sintaxis en `/etc/fstab` (por ejemplo, cambia un UUID por uno inventado) y reinicia la VM. Documenta con capturas el mensaje de error mostrado, el proceso completo de diagnóstico y corrección, y la comprobación final de que el sistema vuelve a arrancar con normalidad.
+> 1. Toma una instantánea de tu VM con el nombre "Antes de romper fstab" — es exactamente el tipo de cambio arriesgado para el que aprendiste a usar snapshots en UD02.
+> 2. `sudo nano /etc/fstab` y cambia el UUID de la línea que acabas de añadir por uno inventado (por ejemplo, altera un par de caracteres del UUID real).
+> 3. Reinicia la VM.
+> 4. Lee con atención el mensaje que aparece (shell de emergencia o pantalla de recuperación) y anota qué línea o dispositivo señala como responsable del fallo.
+> 5. Accede con la contraseña de administración cuando se te pida, edita de nuevo `/etc/fstab` y corrige el UUID.
+> 6. Reinicia una vez más y comprueba que el sistema arranca con normalidad.
+>
+> Documenta con capturas el mensaje de error, el proceso de diagnóstico y corrección, y la comprobación final.
 >
 > **Reflexiona:** explica en 3-4 líneas por qué esta incidencia no tiene nada que ver con el journaling de ext4 que estudiaste en UD01.
 
@@ -158,6 +203,15 @@ Si el problema no es `fstab` sino el propio gestor de arranque (una situación q
 Es, con diferencia, la confusión más habitual de este bloque, así que conviene fijarla bien desde el principio: **`apt update` no instala nada**. Su única función es refrescar el índice local de paquetes disponibles, consultando los repositorios configurados — es como actualizar el catálogo de una tienda para saber qué hay disponible. **`apt upgrade`** es el que de verdad instala las actualizaciones de los paquetes ya instalados en tu sistema, usando ese índice ya refrescado. Por eso casi siempre se ejecutan juntos y en ese orden: `sudo apt update && sudo apt upgrade`.
 
 `apt full-upgrade` (también llamado `dist-upgrade`) hace lo mismo que `upgrade`, pero permitiendo además instalar o eliminar paquetes si hace falta para resolver dependencias mayores entre versiones.
+
+> **Vamos a practicar: actualiza el índice e instala tu primer paquete**
+>
+> **Paso a paso, en tu terminal:**
+>
+> 1. `sudo apt update` — refresca el índice de paquetes disponibles (todavía no instala nada).
+> 2. `sudo apt install tree` — instala una pequeña utilidad que dibuja la estructura de carpetas en forma de árbol.
+> 3. `tree ~` — pruébala sobre tu carpeta personal: te va a recordar mucho a los árboles de directorios que dibujamos a mano en UD01.
+> 4. `apt show tree` — consulta la información del paquete: versión, tamaño, descripción, de dónde viene.
 
 ### De dónde vienen los paquetes: repositorios y PPA
 
@@ -172,9 +226,31 @@ Añadir un PPA equivale a confiar en quien lo mantiene — exactamente el mismo 
 - `apt purge <paquete>` lo desinstala y **también elimina esos archivos de configuración**.
 - `apt autoremove` limpia paquetes que quedaron instalados solo como dependencia de otro, y que ya no necesita ningún paquete instalado.
 
+> **Vamos a practicar: `remove` frente a `purge`**
+>
+> **Paso a paso:**
+>
+> 1. `sudo apt remove tree` — desinstala `tree`, conservando su configuración (si la tuviera).
+> 2. `dpkg -l | grep tree` — comprueba que sigue apareciendo como "rc" (residual config), no completamente limpio.
+> 3. `sudo apt purge tree` — ahora sí, desinstálalo por completo.
+> 4. `dpkg -l | grep tree` — comprueba que ya no aparece ninguna traza.
+> 5. `sudo apt autoremove` — limpia cualquier dependencia huérfana que haya podido quedar.
+
 ### Instalar un `.deb` suelto
 
 Cuando descargas un archivo `.deb` manualmente, sin pasar por un repositorio, se instala con `sudo dpkg -i paquete.deb`. Si ese paquete necesita otros paquetes que no tienes instalados, `dpkg` falla y deja el sistema con "dependencias rotas" — se soluciona con `sudo apt --fix-broken install`, que hace que APT busque y resuelva automáticamente esas dependencias en los repositorios configurados.
+
+> **Vamos a practicar: provoca (y arregla) unas dependencias rotas**
+>
+> **Paso a paso:**
+>
+> 1. Copia a tu VM el archivo `paquete-practica.deb` que te facilitará tu profesor o profesora (por ejemplo, a través de la carpeta compartida configurada en UD02).
+> 2. `sudo dpkg -i paquete-practica.deb` — la instalación va a fallar, indicando que falta una dependencia. Lee el mensaje con atención: ¿qué paquete dice que necesita?
+> 3. `sudo apt --fix-broken install` — deja que APT localice e instale esa dependencia desde los repositorios, y termine de configurar el paquete pendiente.
+> 4. `dpkg -l | grep paquete-practica` — comprueba que ahora aparece correctamente instalado ("ii", no "iF" ni "rc").
+> 5. Si la dependencia resuelta es `cowsay`, pruébala: `cowsay "¡Ya funciona!"`.
+>
+> **Reflexiona:** ¿por qué `dpkg -i` por sí solo no ha sido capaz de resolver la dependencia que faltaba, mientras que `apt` sí lo consigue automáticamente?
 
 ### DNF y `.rpm`: el mismo problema, otra familia de distribuciones
 
@@ -186,18 +262,6 @@ En la familia de distribuciones Fedora/RHEL, el gestor de paquetes equivalente a
 | `apt upgrade` | `dnf update` |
 | `apt install` | `dnf install` |
 | `dpkg -i paquete.deb` | `rpm -i paquete.rpm` |
-
-### Para practicar
-
-**Actividad:** instala una utilidad nueva desde el repositorio oficial (por ejemplo, `htop`), compruébala en funcionamiento y desinstálala con `purge`.
-
-**Ejemplo resuelto:** `sudo apt install htop` la instala; ejecutando `htop` se comprueba que funciona; `sudo apt purge htop` la desinstala eliminando también su configuración — si existiera algún archivo de configuración personalizado en `~/.config/htop/`, tendrías que eliminarlo aparte, porque `purge` solo limpia la configuración a nivel de sistema del paquete, no la de cada usuario.
-
-> **Vamos a practicar: un `.deb` suelto y sus dependencias**
->
-> Descarga un archivo `.deb` de una fuente oficial fiable e instálalo con `dpkg -i`. Si aparecen dependencias rotas (es un resultado esperado, no un fallo tuyo), documenta cómo las resuelves con `apt --fix-broken install`.
->
-> **Reflexiona:** ¿por qué crees que `dpkg -i` por sí solo no resuelve dependencias, mientras que `apt install` sí lo hace automáticamente?
 
 ---
 
@@ -213,19 +277,28 @@ Editar archivos de configuración a mano —como acabas de hacer con `/etc/fstab
 
 Por debajo de todo esto, Ubuntu usa **Netplan** como capa de configuración declarativa (archivos `.yaml` en `/etc/netplan/`) que NetworkManager o systemd-networkd se encargan de aplicar — no necesitas tocarlo directamente para el trabajo habitual, pero conviene que sepas que existe.
 
+> **Vamos a practicar: consulta y cambia tu configuración de red**
+>
+> **Paso a paso, en tu terminal:**
+>
+> 1. `nmcli connection show` — lista las conexiones configuradas y su estado.
+> 2. `nmcli device status` — muestra el estado de cada interfaz de red.
+> 3. `sudo nmtui` — abre el asistente de texto; entra en "Editar una conexión", selecciona la tuya y cambia el método IPv4 de "Automático" a "Manual", introduciendo una dirección dentro del rango que permite el modo de red de tu VM (visto en UD02).
+> 4. Guarda los cambios y reactiva la conexión (`nmcli connection up <nombre>` si no se aplica sola).
+> 5. `ping -c 4 <IP del anfitrión o de otra VM>` — comprueba que tienes conectividad con la nueva configuración.
+> 6. Repite el proceso, esta vez para volver a DHCP.
+>
+> **Reflexiona:** ¿qué modo de red de VirtualBox (de los que viste en UD02: NAT, Red NAT, Adaptador puente, Solo anfitrión, Red interna) es imprescindible para que la IP estática que has configurado tenga sentido, y por qué? No te quedes en "hace falta tener red": explica la relación concreta entre el modo elegido en VirtualBox y la configuración que acabas de hacer dentro del sistema operativo.
+
 ### Dispositivos: impresoras y Bluetooth
 
 El gestor de impresoras de Ubuntu, basado en **CUPS** (*Common UNIX Printing System*), permite añadir una impresora local o de red mediante un asistente gráfico, sin tener que configurar CUPS a mano. El applet de Bluetooth funciona de forma parecida para emparejar dispositivos.
 
-### Para practicar
-
-**Actividad:** consulta las conexiones de red activas de tu VM con `nmcli connection show`, y cambia la configuración de una interfaz de DHCP a una IP estática usando `nmtui`.
-
-**Ejemplo resuelto:** `nmcli connection show` lista las conexiones configuradas y su estado. Desde `nmtui` → "Editar una conexión", se cambia el método IPv4 de "Automático" a "Manual" y se introduce una dirección dentro del rango que permite el modo de red de la VM (visto en UD02). Tras guardar y reactivar la conexión, `ping` a otra VM o al anfitrión confirma que funciona.
-
-> **Vamos a practicar: red y modos de VirtualBox, todo junto**
+> **Vamos a practicar: explora el asistente de impresoras**
 >
-> Vuelve a poner tu VM en DHCP. Después, responde: ¿qué modo de red de VirtualBox (de los que viste en UD02: NAT, Red NAT, Adaptador puente, Solo anfitrión, Red interna) es imprescindible para que una IP estática configurada dentro de la VM tenga sentido, y por qué? No te quedes en "hace falta tener red": explica la relación concreta entre el modo elegido en VirtualBox y la configuración que acabas de hacer dentro del sistema operativo.
+> Abre el gestor de impresoras de tu escritorio (búscalo como "Impresoras" en el menú de aplicaciones) e inicia el asistente para añadir una nueva, aunque no dispongas de ninguna impresora real en el aula. Documenta con capturas cada pantalla del asistente hasta el punto en el que se detiene por falta de una impresora detectada.
+>
+> **Reflexiona:** ¿qué información te pide el asistente antes incluso de buscar una impresora? ¿En qué se parece este proceso al de `nmtui` que acabas de usar para la red?
 
 ---
 
@@ -241,27 +314,41 @@ minuto  hora  día-del-mes  mes  día-de-la-semana  comando
 
 Por ejemplo, `0 2 * * *` significa "todos los días a las 2:00 de la madrugada" (el asterisco significa "cualquier valor" en esa posición).
 
-### `at`: una sola vez, en un momento concreto
-
-A diferencia de `cron`, **`at`** programa una tarea para que se ejecute **una única vez**, en un momento futuro que tú indicas: `at 18:00`, escribes el comando (o comandos) y confirmas con Ctrl+D. `atq` lista las tareas pendientes; `atrm <id>` cancela una.
-
 ### La trampa más habitual: rutas relativas
 
 Cuando escribes un script para automatizarlo con `cron`, la precaución más importante es usar siempre **rutas absolutas** dentro de él (por ejemplo, `/home/tu_usuario/carpeta` en vez de simplemente `carpeta`). El motivo es que el entorno en el que se ejecuta una tarea de `cron` **no es el mismo** que el de una sesión interactiva de terminal: no hereda automáticamente el mismo directorio de trabajo ni las mismas variables de entorno. Un script con rutas relativas que funciona perfectamente al ejecutarlo a mano puede fallar en silencio cuando lo lanza `cron` — es, con diferencia, la causa más habitual de que "algo que funcionaba deje de funcionar en automático".
 
 Otra buena práctica: redirigir la salida del script a un archivo de registro (`>> archivo.log 2>&1`), para poder comprobar después si la tarea se ejecutó correctamente o falló, y por qué.
 
-### Para practicar
+> **Vamos a practicar: tu primera tarea programada con `cron`**
+>
+> **Paso a paso, en tu terminal:**
+>
+> 1. `nano registro.sh` y escribe dentro:
+>    ```bash
+>    #!/bin/bash
+>    date >> /home/tu_usuario/registro.log
+>    ```
+>    (sustituye `tu_usuario` por tu nombre de usuario real, y usa siempre esa ruta absoluta).
+> 2. `chmod +x registro.sh` — dale permisos de ejecución.
+> 3. `./registro.sh` — pruébalo a mano, y comprueba con `cat registro.log` que ha añadido la fecha y hora actuales.
+> 4. `crontab -e` y añade la línea `* * * * * /home/tu_usuario/registro.sh` (ruta absoluta, no `./registro.sh`).
+> 5. Espera 2-3 minutos y ejecuta `cat /home/tu_usuario/registro.log` — deberías ver varias líneas nuevas, una por minuto.
+> 6. `crontab -e` de nuevo y elimina (o comenta con `#` delante) esa línea, para que no siga ejecutándose sin necesidad.
 
-**Actividad:** escribe un script bash sencillo que añada la fecha y hora actuales a un archivo de registro, dale permisos de ejecución y prográmalo con `cron` para que se ejecute cada minuto (solo para poder comprobarlo rápido; en un caso real la frecuencia sería mucho menor).
+### `at`: una sola vez, en un momento concreto
 
-**Ejemplo resuelto:** script `registro.sh` con el contenido `date >> /home/alumno/registro.log`. Tras `chmod +x registro.sh` y comprobarlo a mano, se añade al crontab la línea `* * * * * /home/alumno/registro.sh`, usando siempre la ruta absoluta del script. Al cabo de dos o tres minutos, `cat /home/alumno/registro.log` muestra varias líneas con fechas distintas.
+A diferencia de `cron`, **`at`** programa una tarea para que se ejecute **una única vez**, en un momento futuro que tú indicas: escribes `at 18:00`, introduces el comando (o comandos) y confirmas con Ctrl+D. `atq` lista las tareas pendientes; `atrm <id>` cancela una.
 
 > **Vamos a practicar: una tarea puntual con `at`**
 >
-> Programa con `at` una tarea puntual para dentro de 5 minutos (por ejemplo, que cree un archivo con un mensaje concreto), y comprueba que se ejecuta.
+> **Paso a paso:**
 >
-> **Reflexiona:** si tu script hubiera usado `>> registro.log` en vez de `>> /home/alumno/registro.log`, ¿dónde habría acabado escribiendo el archivo cuando lo ejecutara `cron`, y por qué no sería donde tú esperabas?
+> 1. `echo "echo Tarea completada > /home/tu_usuario/aviso.txt" | at now + 5 minutes` — programa la tarea (sustituye `tu_usuario` por tu usuario real).
+> 2. `atq` — comprueba que la tarea aparece en la cola, con su hora prevista.
+> 3. Espera los 5 minutos y ejecuta `cat /home/tu_usuario/aviso.txt` para comprobar que se ha ejecutado.
+>
+> **Reflexiona:** si el script del ejercicio anterior hubiera usado `>> registro.log` en vez de la ruta absoluta, ¿dónde habría acabado escribiendo el archivo cuando lo ejecutara `cron`, y por qué no sería donde tú esperabas?
 
 ---
 
