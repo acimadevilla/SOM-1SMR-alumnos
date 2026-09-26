@@ -203,7 +203,7 @@ Dado este árbol de directorios de Linux:
 3. Escribe la ruta absoluta de `memoria.pdf`.
 4. Escribe una ruta relativa a `memoria.pdf` suponiendo que partes de `/home/alumno/practicas`.
 
-**5) 💻 Tu propia ruta real.** Abre el explorador de archivos de tu equipo Windows, navega hasta tu carpeta de Documentos y copia la ruta completa desde la barra de direcciones. Escríbela aquí como ruta absoluta, y después escribe una ruta relativa hasta esa misma carpeta partiendo de `C:\Usuarios\<tu usuario>`.
+**5) 💻 Tu propia ruta real.** Abre el explorador de archivos de tu equipo Windows, navega hasta tu carpeta de Documentos y copia la ruta completa desde la barra de direcciones. Escríbela aquí como ruta absoluta, y después escribe una ruta relativa hasta esa misma carpeta partiendo de `C:\Users\<tu usuario>`.
 
 ### Ejercicio 2 — Mayúsculas y minúsculas
 

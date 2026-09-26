@@ -135,15 +135,74 @@ Es habitual pensar que la interfaz gráfica (el escritorio, las ventanas, los ic
 
 La prueba más clara es que un sistema operativo puede funcionar perfectamente **sin ninguna interfaz gráfica**: es lo habitual en los servidores, que se administran por red y no necesitan que nadie se siente delante con teclado y ratón. El sistema operativo sigue estando completo —núcleo, gestión de procesos, memoria, archivos— aunque le falte la capa de shell en su versión gráfica.
 
+### Modo usuario y modo núcleo: quién puede tocar el hardware
+
+En tu ordenador se están ejecutando ahora mismo decenas de programas a la vez, y todos comparten la misma CPU, la misma memoria RAM y los mismos dispositivos. Imagina qué pasaría si cualquiera de ellos pudiera hacer lo que quisiera: un programa con un fallo podría escribir encima de la memoria de otro programa (o del propio sistema operativo), un programa malicioso podría leer directamente el disco saltándose los permisos de los archivos, y un bucle mal programado podría quedarse con la CPU para siempre sin dejar funcionar a nadie más.
+
+El sistema operativo no puede evitarlo solo con software: cuando un programa está ejecutándose, sus instrucciones van directamente a la CPU, sin pedir permiso a nadie. Por eso la protección la pone **el propio hardware**. Todos los procesadores actuales pueden trabajar en, al menos, dos **modos de ejecución**, y en cada momento saben en cuál están:
+
+- **Modo núcleo** (*kernel mode*, también llamado **modo privilegiado** o modo supervisor): se puede ejecutar cualquier instrucción del procesador y acceder a toda la memoria y a todos los dispositivos. En este modo trabaja el **núcleo** del sistema operativo y, en Windows y Linux, también los **controladores**.
+- **Modo usuario** (*user mode*): solo se permiten las instrucciones "normales" (cálculos, comparaciones, leer y escribir en la memoria propia...). Las instrucciones delicadas —acceder directamente a un dispositivo, cambiar la configuración de la memoria, desactivar interrupciones— están prohibidas. En este modo se ejecutan **las aplicaciones**: el navegador, el procesador de textos, un juego, la propia terminal...
+
+| | Modo núcleo | Modo usuario |
+|---|---|---|
+| ¿Quién se ejecuta así? | Núcleo del SO y controladores | Aplicaciones y la mayoría de servicios |
+| ¿Qué puede hacer? | Todo: cualquier instrucción, toda la memoria, todos los dispositivos | Solo instrucciones normales y solo en su propia memoria |
+| ¿Qué pasa si intenta algo prohibido? | — (no hay nada prohibido) | La CPU lo bloquea y avisa al núcleo, que normalmente cierra ese programa |
+| ¿Qué pasa si tiene un fallo grave? | Cae todo el sistema: **pantallazo azul** en Windows, ***kernel panic*** en Linux | Se cierra solo ese programa ("la aplicación ha dejado de funcionar"); el resto sigue |
+
+Esta última fila es la que más vas a notar en la práctica: cuando se cierra de golpe una aplicación, el ordenador sigue funcionando; cuando falla un controlador, suele caer el sistema entero. La diferencia está en el modo en que se ejecutaba cada uno.
+
+> **Detalle técnico:** en los procesadores Intel/AMD (arquitectura x86) existen en realidad cuatro niveles de privilegio, llamados **anillos** (*rings*) y numerados del 0 al 3. Windows y Linux solo usan dos: el **anillo 0** para el modo núcleo y el **anillo 3** para el modo usuario. Por eso es habitual oír "esto se ejecuta en *ring 0*" como sinónimo de "se ejecuta en modo núcleo".
+
+#### Las llamadas al sistema: pedir las cosas por ventanilla
+
+Si una aplicación no puede tocar el disco, ¿cómo guarda un documento? **Se lo pide al núcleo.** Para eso existen las **llamadas al sistema** (*system calls*): una forma controlada de que un programa en modo usuario solicite un servicio al sistema operativo (abrir un archivo, escribir en él, enviar datos por la red, crear un proceso...).
+
+Funciona como la ventanilla de un banco: el cliente no puede entrar en la cámara acorazada a coger su dinero, sino que lo pide en la ventanilla; el empleado comprueba que la petición es correcta (que la cuenta es suya, que tiene saldo) y es él quien entra a buscarlo. De la misma forma, cuando un programa hace una llamada al sistema:
+
+1. El procesador **cambia a modo núcleo** y salta a un punto de entrada fijo del núcleo. El programa no puede elegir a qué parte del núcleo salta: solo "llama a la ventanilla".
+2. El núcleo **comprueba** la petición: que el archivo existe, que ese usuario tiene permiso para escribir en él, que los datos pertenecen al propio programa...
+3. Si todo es correcto, el núcleo hace el trabajo (por ejemplo, ordena al controlador del disco que escriba los datos).
+4. El procesador **vuelve a modo usuario** y el programa recibe el resultado.
+
+Los programadores no suelen hacer estas llamadas directamente, sino a través de bibliotecas del sistema (en Windows, la API de Windows; en Linux, la biblioteca estándar de C, *glibc*), pero por debajo siempre acaban en una llamada al sistema.
+
+Además de las llamadas al sistema, el procesador pasa a modo núcleo en otros dos casos: cuando un programa provoca un **error** (dividir entre cero, acceder a memoria que no es suya, necesitar una página que no está en la RAM, como viste en la paginación por demanda) y cuando llega una **interrupción** del hardware (se pulsa una tecla, llega un paquete de red o salta el temporizador del sistema). Gracias a ese temporizador, el núcleo recupera el control cada pocos milisegundos, y por eso ningún programa puede quedarse con la CPU para siempre, aunque tenga un bucle infinito.
+
+Fíjate en el reparto de tareas que hay detrás de todo esto: **el sistema operativo decide, pero necesita la ayuda del procesador para hacer cumplir sus decisiones**. Es el sistema operativo quien decide qué proceso se ejecuta, cuánta memoria recibe cada uno o qué hacer cuando un programa comete un error; pero es el procesador quien, con el temporizador, le devuelve el control; quien, con la protección de memoria, impide que un proceso invada a otro; y quien, con el modo núcleo, impide que los programas se salten las reglas. De hecho, la CPU ni siquiera sabe qué es un "proceso": eso es una idea del sistema operativo, que es quien lleva la cuenta de cada uno.
+
+Cambiar de modo **no es gratis**: el procesador tiene que guardar su estado, saltar al núcleo y volver, y cada cambio consume un pequeño tiempo. Un programa que hace millones de llamadas al sistema lo nota. Este coste es precisamente la clave para entender los distintos tipos de núcleo del apartado siguiente.
+
+> **Cuidado con esta confusión: ser administrador NO es ejecutarse en modo núcleo.** Cuando ejecutas un programa como administrador en Windows, o un comando con `sudo` en Linux, ese programa sigue ejecutándose en **modo usuario**. Ser administrador (o `root`) es un permiso **del sistema operativo**: el núcleo acepta más peticiones de ese programa. El modo núcleo es un estado **del procesador**. La relación entre ambos es que el administrador puede **instalar código que se ejecutará en modo núcleo**, como un controlador — por eso instalar drivers exige privilegios de administrador, y por eso hay que tener mucho cuidado con qué drivers se instalan.
+
+> **Vamos a practicar: ¿cuánto trabaja el núcleo en tu equipo?**
+>
+> 1. En Windows, abre el Administrador de tareas (`Ctrl+Shift+Esc`) → pestaña **Rendimiento** → **CPU**. Haz clic derecho sobre la gráfica y activa **"Mostrar tiempos de kernel"**. Aparece una segunda zona, más oscura: es el tiempo que la CPU pasa en **modo núcleo**; el resto es tiempo en modo usuario.
+> 2. Con la gráfica a la vista, haz dos cosas distintas y observa qué zona sube en cada caso: primero, copia una carpeta grande de un sitio a otro (o descarga un archivo grande); después, reproduce un vídeo o abre una página web pesada.
+> 3. (Opcional, en Linux) En una terminal, ejecuta `top` y fíjate en la línea `%Cpu(s)`: el valor `us` (*user*) es el tiempo en modo usuario y `sy` (*system*) el tiempo en modo núcleo. Pulsa `q` para salir.
+>
+> **Reflexiona:** ¿en cuál de las dos tareas del paso 2 ha subido más el tiempo de kernel? ¿Por qué crees que copiar archivos obliga a trabajar más al núcleo? (Pista: ¿quién es el único que puede hablar con el disco?)
+
 ### Tipos de núcleo
 
-No todos los núcleos se diseñan de la misma forma. Existen tres modelos:
+Con los dos modos de ejecución claros, ya se puede entender en qué se diferencian los tipos de núcleo. La pregunta clave es: **¿qué partes del sistema operativo se ejecutan en modo núcleo, y cuáles en modo usuario?** Existen tres modelos:
 
-- **Monolítico**: todos los servicios básicos (procesos, memoria, drivers...) se ejecutan juntos, en el mismo espacio privilegiado. Es rápido, pero un fallo en cualquier parte puede afectar a todo el núcleo. Es el caso de **Linux** (aunque es modular: puede cargar y descargar partes de su funcionalidad en caliente, mediante módulos).
-- **Microkernel**: el núcleo se reduce al mínimo imprescindible, y el resto de servicios se ejecutan como procesos independientes y aislados entre sí. Es más robusto ante fallos, a cambio de más coste de rendimiento por la comunicación constante entre piezas separadas.
-- **Híbrido**: combina ideas de ambos modelos, buscando un equilibrio. Es el caso de **Windows NT** (la base de todos los Windows modernos) y también de **macOS/iOS** (que usa un núcleo llamado XNU).
+- **Monolítico**: todos los servicios básicos (gestión de procesos, memoria, sistemas de archivos, red, controladores...) se ejecutan juntos en **modo núcleo**. Como todo está "en el mismo sitio", las distintas partes se comunican directamente entre sí, sin cambios de modo, y eso lo hace **muy rápido**. El inconveniente es que un fallo en cualquier parte —por ejemplo, en un controlador— puede tumbar el sistema entero. Es el caso de **Linux**. Linux es además **modular**: puede cargar y descargar partes de su funcionalidad en caliente mediante **módulos** (normalmente controladores). Pero ojo: un módulo, una vez cargado, se ejecuta **dentro del núcleo, en modo núcleo**; "modular" no significa "aislado".
+- **Microkernel**: en modo núcleo se deja solo lo mínimo imprescindible (comunicación entre procesos, reparto básico de la CPU y de la memoria). El resto de servicios —controladores, sistemas de archivos, red— se ejecutan como **procesos independientes en modo usuario**. Si un controlador falla, se cierra solo ese proceso y se puede volver a arrancar sin que caiga el sistema: es **más robusto**. A cambio, cualquier operación exige muchos mensajes entre procesos y muchos cambios de modo, y eso lo hace **más lento**. Se usa donde la fiabilidad importa más que el último punto de rendimiento: por ejemplo, **QNX**, muy presente en los sistemas de los coches, o **MINIX**.
+- **Híbrido**: el diseño está organizado como un microkernel (en piezas separadas y bien definidas), pero, **por rendimiento**, la mayoría de esas piezas se ejecutan en modo núcleo, como en un monolítico. Es el caso de **Windows NT** (la base de todos los Windows modernos), donde los controladores y hasta parte del sistema gráfico se ejecutan en modo núcleo, y también de **macOS/iOS** (con su núcleo XNU). En la práctica, en cuanto a qué se ejecuta en cada modo, un núcleo híbrido se parece bastante más a un monolítico que a un microkernel.
+
+| | Monolítico | Microkernel | Híbrido |
+|---|---|---|---|
+| Qué hay en modo núcleo | Todo | Solo lo mínimo | Casi todo |
+| Controladores | Modo núcleo | Modo usuario | Modo núcleo (mayoritariamente) |
+| Rendimiento | Alto | Menor | Alto |
+| Si falla un controlador | Puede caer todo el sistema | Se reinicia ese proceso | Puede caer todo el sistema |
+| Ejemplos | Linux | QNX, MINIX | Windows NT, macOS (XNU) |
 
 No existe una jerarquía de calidad entre estos tres modelos: son decisiones de diseño distintas, cada una con sus ventajas e inconvenientes. Que Linux use un núcleo monolítico no lo hace "anticuado" frente a un microkernel, ni un núcleo híbrido es automáticamente "lo mejor de ambos mundos" sin matices.
+
+> **Actualidad:** en julio de 2024, una actualización defectuosa de un programa de seguridad llamado CrowdStrike Falcon provocó pantallazos azules en unos 8,5 millones de ordenadores con Windows en todo el mundo, parando aeropuertos, bancos y hospitales. El motivo de que el fallo fuera tan grave es que ese programa incluía un **controlador que se ejecutaba en modo núcleo**: el mismo error en un programa en modo usuario solo habría cerrado ese programa. Desde entonces, Microsoft trabaja para que los antivirus y programas de seguridad puedan funcionar **fuera** del modo núcleo.
 
 ### Windows y Linux, capa a capa
 
@@ -219,10 +278,12 @@ Cuando guardas un archivo, no se coloca en un lugar aleatorio del disco: el **si
 
 ### La jerarquía de directorios en Windows
 
-Windows organiza los discos con **letras de unidad** (`C:\`, `D:\`...), cada una con su propia estructura de carpetas. Dentro de la unidad principal encontrarás carpetas típicas como `Usuarios`, `Archivos de programa` o `Windows`. Las rutas se escriben separando carpetas con la barra invertida `\`, y pueden ser:
+Windows organiza los discos con **letras de unidad** (`C:\`, `D:\`...), cada una con su propia estructura de carpetas. Dentro de la unidad principal encontrarás carpetas típicas como `Users` (usuarios), `Program Files` (programas instalados) o `Windows`. Las rutas se escriben separando carpetas con la barra invertida `\`, y pueden ser:
 
-- **Absolutas**: desde la raíz de la unidad, por ejemplo `C:\Usuarios\Alejandro\Documentos\informe.docx`.
-- **Relativas**: desde la carpeta en la que ya estás, por ejemplo `Documentos\informe.docx` si ya estás dentro de `C:\Usuarios\Alejandro`.
+- **Absolutas**: desde la raíz de la unidad, por ejemplo `C:\Users\Alejandro\Documents\informe.docx`.
+- **Relativas**: desde la carpeta en la que ya estás, por ejemplo `Documents\informe.docx` si ya estás dentro de `C:\Users\Alejandro`.
+
+> **Ojo: el Explorador "traduce" algunos nombres.** En un Windows en español, el Explorador muestra carpetas como `Usuarios`, `Documentos` o `Archivos de programa`, pero en el disco esas carpetas se llaman en realidad `Users`, `Documents` y `Program Files`. El nombre en español es solo una etiqueta para mostrar. Lo notarás en cuanto hagas clic en la barra de direcciones para ver la ruta como texto, o cuando trabajes en una terminal: la ruta real es `C:\Users\...`, y es la que tienes que escribir.
 
 ### La jerarquía de directorios en Linux
 
@@ -278,7 +339,7 @@ Un archivo oculto **no está protegido** de ningún modo especial: simplemente n
 >
 > **Vamos a practicar: tu propia ruta real**
 >
-> Abre el explorador de archivos de tu equipo Windows y navega hasta tu carpeta personal de Documentos. Haz clic en la barra de direcciones para que se muestre la ruta completa como texto y cópiala. Escríbela aquí como ruta absoluta y, después, escribe una ruta relativa hasta esa misma carpeta partiendo de tu carpeta de usuario (`C:\Usuarios\<tu usuario>`). Como cada alumno tiene un nombre de usuario distinto, tu ruta será distinta a la de cualquier compañero — no la puedes copiar de nadie.
+> Abre el explorador de archivos de tu equipo Windows y navega hasta tu carpeta personal de Documentos. Haz clic en la barra de direcciones para que se muestre la ruta completa como texto y cópiala. Escríbela aquí como ruta absoluta y, después, escribe una ruta relativa hasta esa misma carpeta partiendo de tu carpeta de usuario (`C:\Users\<tu usuario>`). Como cada alumno tiene un nombre de usuario distinto, tu ruta será distinta a la de cualquier compañero — no la puedes copiar de nadie.
 >
 > **Vamos a practicar: oculta un archivo de verdad**
 >
@@ -588,7 +649,8 @@ Con lo aprendido en esta unidad:
 - El sistema operativo se organiza por capas (núcleo, controladores, shell, aplicaciones) y cumple cuatro funciones: gestión de procesos, memoria, archivos y entrada/salida.
 - Windows 11 y Linux gestionan la memoria mediante paginación por demanda: solo cargan en RAM las páginas que se usan en cada momento, recurriendo al disco (paginación/swap) cuando hace falta más sitio.
 - La interfaz gráfica es la versión gráfica del shell, no una capa aparte ni el sistema operativo en sí.
-- Los núcleos pueden ser monolíticos (Linux), híbridos (Windows, macOS) o microkernel — son diseños distintos, no una jerarquía de calidad.
+- La CPU trabaja en modo núcleo (todo permitido: núcleo y controladores) o en modo usuario (aplicaciones, con acceso restringido). Las aplicaciones piden los servicios al núcleo mediante llamadas al sistema. Ser administrador o `root` no significa ejecutarse en modo núcleo.
+- Los núcleos pueden ser monolíticos (Linux: todo en modo núcleo), microkernel (solo lo mínimo en modo núcleo) o híbridos (Windows, macOS: diseño por piezas, pero casi todo en modo núcleo) — son diseños distintos, no una jerarquía de calidad.
 - Un proceso es un programa en ejecución, con estados: nuevo, listo, ejecución, bloqueado, terminado.
 - Windows organiza los archivos con letras de unidad; Linux usa una única raíz `/` y distingue mayúsculas de minúsculas.
 - El texto también se representa en binario: Unicode asigna un número (*code point*) a cada carácter posible; UTF-8 (la codificación dominante hoy) convierte ese número en 1 a 4 bytes según un patrón de bits fijo, manteniendo compatibilidad con ASCII; UTF-16 sigue viva por dentro de Windows, Java y JavaScript.
