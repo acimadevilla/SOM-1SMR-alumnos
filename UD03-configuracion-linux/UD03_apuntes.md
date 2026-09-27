@@ -137,7 +137,7 @@ No necesitas un disco físico nuevo para practicar esto: puedes crear un archivo
 >
 > **Paso a paso, en tu terminal:**
 >
-> 1. `dd if=/dev/zero of=/root/disco_prueba.img bs=1M count=100` — crea un archivo de 100 MB que va a hacer de disco.
+> 1. `sudo dd if=/dev/zero of=/root/disco_prueba.img bs=1M count=100` — crea un archivo de 100 MB que va a hacer de disco. Hace falta `sudo` porque lo guardamos en `/root`, la carpeta personal del administrador, en la que tu usuario no puede escribir.
 > 2. `sudo mkfs.ext4 /root/disco_prueba.img` — lo formatea con el sistema de archivos ext4 (el mismo que usa tu VM).
 > 3. `sudo mkdir /mnt/prueba` — crea el punto de montaje.
 > 4. `sudo mount -o loop /root/disco_prueba.img /mnt/prueba` — lo monta manualmente, como si fuera un disco real.
@@ -156,18 +156,38 @@ Montar a mano cada vez que arrancas sería muy poco práctico para los discos qu
 <dispositivo>  <punto de montaje>  <tipo de sistema de archivos>  <opciones>  <dump>  <pass>
 ```
 
-Se recomienda identificar el dispositivo por su **UUID** (un identificador único y estable para esa partición o archivo concreto) en vez de por su nombre de dispositivo. La razón es puramente práctica: un nombre como `/dev/sdaX` puede cambiar entre arranques si se añaden o quitan discos, mientras que el UUID no cambia nunca. El comando `blkid` muestra el UUID de una partición o de un archivo de imagen como el que acabas de crear.
+- **Dispositivo:** qué se monta (luego verás cómo identificarlo).
+- **Punto de montaje:** en qué carpeta aparecerá su contenido.
+- **Tipo:** el sistema de archivos (`ext4`, `vfat`, `ntfs`, `swap`...).
+- **Opciones:** cómo se monta. `defaults` aplica las opciones habituales; hay otras, como `nofail` (arrancar aunque el dispositivo no esté) o `ro` (solo lectura).
+- **Dump:** una opción heredada de una antigua herramienta de copias de seguridad. Hoy se deja casi siempre a `0`.
+- **Pass:** el orden en que se comprueba el sistema de archivos al arrancar: `1` para la raíz, `2` para el resto y `0` para no comprobarlo.
 
-> **Vamos a practicar: monta tu disco de prueba automáticamente**
+Se recomienda identificar el dispositivo por su **UUID** (un identificador único y estable para cada sistema de archivos) en vez de por su nombre de dispositivo. La razón es puramente práctica: un nombre como `/dev/sdb1` puede cambiar entre arranques si se añaden o quitan discos, mientras que el UUID no cambia nunca. El comando `blkid` muestra el UUID de cada partición.
+
+Hay un detalle más que conviene conocer: systemd no lee `fstab` cada vez que lo necesita. Lo lee al arrancar y convierte cada línea en una **unidad `.mount`**, del mismo tipo que las que viste en el apartado 1. Por eso, cuando editas `fstab` con el sistema en marcha, tienes que pedirle a systemd que lo vuelva a leer con `sudo systemctl daemon-reload`.
+
+**¿Y el disco de prueba que acabas de montar a mano?** Para `fstab` no sirve. `blkid` te mostrará un UUID si se lo pides sobre el archivo `disco_prueba.img`, pero al arrancar, systemd y `mount` buscan ese UUID entre los **dispositivos reales** del sistema, y un archivo de imagen no lo es. Resultado: el disco "no aparece nunca" y el arranque se detiene esperándolo. Para practicar `fstab` de verdad, vas a añadir a tu VM un segundo disco, exactamente como harías con un disco nuevo en un equipo real.
+
+> **Vamos a practicar: añade un segundo disco y haz que se monte solo**
 >
 > **Paso a paso:**
 >
-> 1. `sudo blkid /root/disco_prueba.img` — anota el UUID que te devuelve.
-> 2. `sudo nano /etc/fstab` y añade al final la línea `UUID=<tu-uuid> /mnt/prueba ext4 loop 0 2` (sustituyendo `<tu-uuid>` por el UUID real que has anotado).
-> 3. `sudo mount -a` — aplica `fstab` sin reiniciar, y comprueba con `df -h` que tu disco de prueba se ha montado solo.
-> 4. Reinicia la VM y, tras el arranque, comprueba de nuevo con `df -h | grep prueba` que sigue montado sin que hayas tenido que montarlo tú.
+> 1. **Con la VM apagada**, en VirtualBox abre **Configuración → Almacenamiento**, selecciona el controlador SATA y pulsa el icono de **añadir disco duro**. Elige **Crear**, tipo VDI, reservado dinámicamente, de **1 GB**, con el nombre `datos`. Selecciónalo y acepta.
+> 2. Arranca la VM y ejecuta `lsblk`. Deberías ver un disco nuevo de 1G sin particiones, normalmente `sdb` (tu disco del sistema es `sda`). Anota su nombre exacto.
+> 3. `sudo parted /dev/sdb --script mklabel gpt mkpart datos ext4 0% 100%` — crea en el disco nuevo una tabla de particiones GPT y una partición que lo ocupa entero. **Comprueba antes que `sdb` es el disco nuevo, el de 1G: si pones el disco de tu sistema, borrarás su tabla de particiones.**
+> 4. `lsblk` de nuevo — ahora aparece `sdb1`, la partición que acabas de crear.
+> 5. `sudo mkfs.ext4 /dev/sdb1` — le da formato ext4.
+> 6. `sudo mkdir /mnt/datos` — crea el punto de montaje.
+> 7. `sudo blkid /dev/sdb1` — anota el UUID de la **partición** (`sdb1`, no `sdb`).
+> 8. `sudo nano /etc/fstab` y añade al final la línea `UUID=<tu-uuid> /mnt/datos ext4 defaults 0 2`, sustituyendo `<tu-uuid>` por el UUID real que has anotado.
+> 9. `sudo systemctl daemon-reload` — systemd vuelve a leer `fstab`.
+> 10. `sudo mount -a` — monta todo lo que indica `fstab` y no está montado todavía. Si hay un error en tu línea, te lo dirá ahora, con el sistema en marcha, y no en el próximo arranque. Comprueba con `df -h /mnt/datos` que el disco está montado.
+> 11. Reinicia la VM y, tras el arranque, comprueba de nuevo con `df -h /mnt/datos` que sigue montado sin que hayas hecho nada.
 >
-> **Ejemplo resuelto:** `blkid` devuelve `/root/disco_prueba.img: UUID="1a2b3c4d-5e6f-..." TYPE="ext4"`. La línea añadida a `fstab` queda `UUID=1a2b3c4d-5e6f-... /mnt/prueba ext4 loop 0 2`. Tras `sudo mount -a`, `df -h` muestra `/mnt/prueba` en la lista sin haberlo montado manualmente.
+> **Ejemplo resuelto:** `blkid` devuelve `/dev/sdb1: UUID="1a2b3c4d-5e6f-..." TYPE="ext4" PARTLABEL="datos"`. La línea añadida a `fstab` queda `UUID=1a2b3c4d-5e6f-... /mnt/datos ext4 defaults 0 2`. Tras `sudo systemctl daemon-reload` y `sudo mount -a`, `df -h` muestra `/dev/sdb1` montado en `/mnt/datos`, con algo menos de 1 GB de tamaño.
+>
+> **Reflexiona:** ¿por qué te pide el paso 10 ejecutar `mount -a` antes de reiniciar? ¿Qué ganas probándolo así?
 
 ### La excepción a la regla del UUID: el swap
 
@@ -189,9 +209,19 @@ La razón es que, desde hace varias versiones, Ubuntu ya no crea una **partició
 
 ### Cuando el arranque falla: no es el fin del mundo
 
-Un error de sintaxis en `/etc/fstab` puede hacer que el sistema no complete su arranque con normalidad, y entre en un **modo de emergencia** (`emergency.target` de systemd) o en el modo de recuperación del menú avanzado de GRUB, que ya viste por encima en UD02. Es importante que interiorices esto: **no se ha perdido ningún dato**, el sistema simplemente no puede continuar hasta que se corrija la configuración que le impide montar correctamente todo lo que tiene indicado.
+Un error en `/etc/fstab` puede hacer que el sistema no complete su arranque con normalidad. Si una línea indica un disco que no aparece, o un montaje que no se puede hacer, y no lleva la opción `nofail`, systemd espera un rato al dispositivo (hasta un minuto y medio) y después se detiene en el **modo de emergencia** (`emergency.target`). Es importante que interiorices esto: **no se ha perdido ningún dato**. El sistema simplemente no puede continuar hasta que se corrija la configuración que le impide montar todo lo que tiene indicado.
 
-**Aviso importante, relacionado con lo visto en UD01 sobre journaling:** el journaling de ext4 protege la consistencia del sistema de archivos ante cortes de luz o interrupciones bruscas — pero **no protege de un error humano de configuración** como un `fstab` mal escrito. Son dos problemas de naturaleza completamente distinta, y confundirlos es un error conceptual habitual.
+**Aviso importante, relacionado con lo visto en UD01 sobre journaling:** el journaling de ext4 protege la consistencia del sistema de archivos ante cortes de luz o interrupciones bruscas, pero **no protege de un error humano de configuración** como un `fstab` mal escrito. Son dos problemas de naturaleza completamente distinta, y confundirlos es un error conceptual habitual.
+
+### Entrar a reparar cuando Ubuntu no te deja
+
+En muchas distribuciones, el modo de emergencia pide la contraseña de root y te da una terminal para corregir el error. **En Ubuntu, la cuenta de root está bloqueada por defecto**: tu usuario administra el sistema con `sudo`, pero root no tiene contraseña con la que entrar. Por eso, lo normal es que el modo de emergencia muestre un mensaje como `Cannot open access to console, the root account is locked` y no te deje hacer nada.
+
+La solución es entrar "por otra puerta": pedirle a GRUB que, en lugar de arrancar el sistema normal, arranque directamente una terminal de root. Para ello, se edita la línea de arranque del núcleo y se le añade el parámetro `init=/bin/bash`. Recuerda del apartado 1 que el primer proceso que arranca el núcleo es systemd; con `init=/bin/bash` le dices que, en su lugar, arranque una terminal. No se ejecuta nada más: ni systemd, ni `fstab`, ni el escritorio. Solo la terminal, con el disco del sistema montado en modo **solo lectura**, así que lo primero es volver a montarlo en modo escritura.
+
+Otra vía, más lenta pero que funciona siempre, es arrancar desde una **ISO de Ubuntu en modo *live*** (la que descargaste en UD02), montar desde ahí el disco del sistema y corregir el archivo.
+
+Que cualquiera con acceso al menú de GRUB pueda hacer esto tiene una lectura de seguridad importante: **quien tiene acceso físico a un equipo, tiene el equipo**. Por eso en entornos profesionales se protege GRUB con contraseña y se cifra el disco, algo que verás en el módulo de Seguridad Informática.
 
 ### Reparar GRUB cuando el propio gestor de arranque falla
 
@@ -202,15 +232,22 @@ Si el problema no es `fstab` sino el propio gestor de arranque (una situación q
 > **Paso a paso:**
 >
 > 1. Toma una instantánea de tu VM con el nombre "Antes de romper fstab" — es exactamente el tipo de cambio arriesgado para el que aprendiste a usar snapshots en UD02.
-> 2. `sudo nano /etc/fstab` y cambia el UUID de la línea que acabas de añadir por uno inventado (por ejemplo, altera un par de caracteres del UUID real).
-> 3. Reinicia la VM.
-> 4. Lee con atención el mensaje que aparece (shell de emergencia o pantalla de recuperación) y anota qué línea o dispositivo señala como responsable del fallo.
-> 5. Accede con la contraseña de administración cuando se te pida, edita de nuevo `/etc/fstab` y corrige el UUID.
-> 6. Reinicia una vez más y comprueba que el sistema arranca con normalidad.
+> 2. `sudo nano /etc/fstab` y, en la línea de `/mnt/datos` que añadiste antes, cambia un par de caracteres del UUID para que no corresponda a ningún disco.
+> 3. Reinicia la VM. El arranque parecerá bloqueado durante un minuto y medio: systemd está esperando a un disco con ese UUID, que no va a aparecer nunca.
+> 4. Lee con atención el mensaje que aparece y anótalo literalmente, junto con la unidad o el dispositivo que señala como responsable del fallo.
+> 5. Si el mensaje dice que la cuenta de root está bloqueada, no insistas: reinicia la VM desde el menú de VirtualBox (**Máquina → Reiniciar**).
+> 6. Justo al empezar el arranque, mantén pulsada la tecla `Mayús` (si tu VM arranca en modo BIOS) o pulsa `Esc` varias veces (si arranca en modo UEFI) hasta que aparezca el menú de GRUB.
+> 7. Con la entrada de Ubuntu seleccionada, pulsa `e`. Busca la línea que empieza por `linux`, ve al final de esa línea y añade un espacio y `init=/bin/bash`. Arranca con `Ctrl+X` o `F10`.
+> 8. `mount -o remount,rw /` — vuelve a montar el disco del sistema en modo escritura.
+> 9. `blkid /dev/sdb1` — consulta el UUID correcto. Después, `nano /etc/fstab` y corrige la línea.
+> 10. `sync` (asegura que el cambio se escribe en el disco) y después `reboot -f`.
+> 11. Comprueba que el sistema arranca con normalidad y que `df -h /mnt/datos` vuelve a mostrar el disco montado.
+>
+> **Ojo con el teclado:** en el editor de GRUB, y puede que también en la terminal que arranca con `init=/bin/bash`, el teclado funciona con la distribución estadounidense, no con la española. Con un teclado español, la `/` está en la tecla `-`, el `=` en la tecla `¡` y el `-` en la tecla `'`.
 >
 > Documenta con capturas el mensaje de error, el proceso de diagnóstico y corrección, y la comprobación final.
 >
-> **Reflexiona:** explica en 3-4 líneas por qué esta incidencia no tiene nada que ver con el journaling de ext4 que estudiaste en UD01.
+> **Reflexiona:** explica en 3-4 líneas por qué esta incidencia no tiene nada que ver con el journaling de ext4 que estudiaste en UD01. Y después: si hubieras escrito la línea con `defaults,nofail` en lugar de `defaults`, ¿qué habría pasado en el paso 3?
 
 ---
 
@@ -463,7 +500,7 @@ Con lo aprendido en esta unidad:
 - Una sesión es el conjunto de procesos asociados a un usuario autenticado; cerrar sesión no es lo mismo que apagar el equipo.
 - Un entorno de escritorio (GNOME, KDE Plasma, XFCE, MATE...) es la implementación concreta de la capa de shell gráfico; se pueden tener varios instalados a la vez y elegir cuál usar desde la pantalla de login.
 - `/etc/fstab` define qué se monta automáticamente en cada arranque; usar UUID en vez del nombre de dispositivo evita problemas si cambia el orden de detección de discos.
-- Un error en `fstab` puede impedir el arranque normal, pero es recuperable sin perder datos: el modo de emergencia o el de recuperación de GRUB permiten diagnosticar y corregir.
+- Un error en `fstab` puede impedir el arranque normal, pero es recuperable sin perder datos. En Ubuntu, con root bloqueado, se entra a corregirlo editando el arranque en GRUB (`init=/bin/bash`) o desde una ISO *live*. Tras editar `fstab`, `systemctl daemon-reload` y `mount -a` permiten detectar el error antes de reiniciar.
 - `apt update` refresca el índice de paquetes disponibles; `apt upgrade` instala las actualizaciones — no son lo mismo.
 - `remove` desinstala un paquete conservando su configuración; `purge` la elimina también. Un `.deb` suelto se instala con `dpkg -i`, resolviendo dependencias rotas con `apt --fix-broken install`.
 - Snap es otro gestor de paquetes de Ubuntu, con paquetes autocontenidos; convive con APT sin conflicto, y tiene su propio `remove`/`remove --purge`.
