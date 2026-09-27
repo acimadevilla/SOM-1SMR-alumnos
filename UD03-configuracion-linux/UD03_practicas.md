@@ -10,6 +10,17 @@
 >
 > Puedes (y debes) consultar tus apuntes, las páginas de manual (`man comando`) y la ayuda de cada comando (`comando --help`). Lo que no vale es aplicar soluciones al azar hasta que algo funcione: un técnico que arregla algo sin saber por qué se ha roto no ha terminado su trabajo.
 
+### Cómo se evalúan
+
+La nota de UD03 se reparte así: **fichas de prácticas, 35%** y **examen, 65%**. Dentro del 35% de las fichas:
+
+| Parte | Peso en la nota de la unidad | Qué se valora |
+|---|---|---|
+| Parte A — Prácticas guiadas | 15% | Que esté hecha y completa: todas las capturas 📸, con tu *prompt*, y las respuestas a los "Reflexiona". |
+| Parte B — Retos | 20% | Tus informes y entregas. En los retos 🔧 se valora **cómo has trabajado** (síntoma, pruebas reales, razonamiento), **aunque no llegues a resolverlo**. |
+
+Las fichas son, sobre todo, una herramienta para aprender: el examen pregunta por lo mismo que practicas en ellas.
+
 ---
 
 ## Antes de empezar
@@ -66,6 +77,14 @@ Cada reto 🔧 se entrega con un informe como este, con las capturas de las prue
 
 Un informe con el apartado "Pruebas" vacío o de una sola línea no está completo, aunque el problema esté resuelto.
 
+**Regla de las evidencias:** cada comando que cites en tu informe tiene que aparecer en una captura de **tu** VM, con su *prompt* y su resultado. Un informe que explica comandos que no aparecen en tus capturas no cuenta como hecho.
+
+**Para qué sirven estas fichas:** para aprender, no para demostrar que ya sabes. Equivocarte en un reto, probar algo que no funciona y anotarlo en tu informe es exactamente lo que se espera: así es como se aprende a diagnosticar. Si le pides la solución a una IA, entregarás un informe, pero llegarás al examen sin haber practicado lo que se va a preguntar.
+
+### Las pistas de comandos
+
+Cada reto incluye una línea 🔎 con **algunos** comandos que te pueden servir. No están en orden, no llevan las opciones que necesitas y puede que no los uses todos: te dicen por dónde buscar, no qué escribir. Busca cada uno en tus apuntes o en su página de manual (`man comando`) antes de ejecutarlo.
+
 ---
 
 ## Ficha 1 — Arranque y sesiones
@@ -98,6 +117,8 @@ Un informe con el apartado "Pruebas" vacío o de una sola línea no está comple
 
 **Tu misión:** averigua por qué el sistema arranca así, deja el equipo arrancando de nuevo en modo gráfico **de forma permanente** y demuéstralo reiniciando.
 
+🔎 **Comandos que te pueden servir** (búscalos en tus apuntes o en `man` para ver cómo se usan): `systemctl get-default` · `systemctl set-default` · `journalctl -b`
+
 **Para pensar mientras trabajas:** ¿habría bastado con un comando `isolate`? ¿Qué habría pasado en el siguiente arranque?
 
 **Comprobación:** `sudo bash saboteoControlado.sh --comprobar 1.1` 📸
@@ -114,6 +135,8 @@ Un informe con el apartado "Pruebas" vacío o de una sola línea no está comple
 2. Identifica cuál es la tuya, la que estás usando en este momento, y explica **cómo lo sabes**.
 3. Cierra la otra sesión **sin reiniciar el equipo y sin cerrar la tuya**. El comando que necesitas no aparece en los apuntes: búscalo en `man loginctl`.
 4. Demuestra que ya solo queda tu sesión. 📸
+
+🔎 **Comandos que te pueden servir** (búscalos en tus apuntes o en `man` para ver cómo se usan): `loginctl list-sessions` · `loginctl show-session` · `echo $XDG_SESSION_ID` · `man loginctl`
 
 #### Ejercicio 1.3 📝 — ¿Qué harías en cada caso?
 
@@ -171,6 +194,8 @@ Para cada situación, indica qué acción es la adecuada (cerrar sesión, bloque
 
 Borra las carpetas entre un intento y otro, para que las condiciones sean iguales.
 
+🔎 **Comandos que te pueden servir** (búscalos en tus apuntes o en `man` para ver cómo se usan): `mkdir` · `uname` · `df` · `gsettings`
+
 **Entrega:** una tabla con los tiempos, una captura de la terminal con los comandos que has usado, y una conclusión de 5-6 líneas que responda: ¿en qué tipo de tareas gana cada interfaz, y por qué? ¿Cuál de las dos usarías para administrar un equipo que está en otro edificio?
 
 #### Reto 2.2 💻 — Un escritorio para el aula de equipos antiguos
@@ -185,6 +210,8 @@ Borra las carpetas entre un intento y otro, para que las condiciones sean iguale
 4. Deja tu VM iniciando sesión con el entorno elegido y personalízalo para que resulte familiar a un usuario de Windows: barra de tareas abajo y menú de aplicaciones en la esquina.
 5. Al terminar, devuelve la RAM y la CPU de tu VM a sus valores originales.
 
+🔎 **Comandos que te pueden servir** (búscalos en tus apuntes o en `man` para ver cómo se usan): `free -h` · *Monitor del sistema* · *Configuración de la VM en VirtualBox → Sistema*
+
 **Entrega:** tabla de medidas con sus capturas, recomendación justificada y captura del escritorio personalizado.
 
 #### Reto 2.3 🔧 — La sesión que ha desaparecido
@@ -194,6 +221,8 @@ Borra las carpetas entre un intento y otro, para que las condiciones sean iguale
 **Situación:** un usuario usaba a diario el segundo entorno de escritorio que tenía instalado. Hoy, en la pantalla de inicio de sesión, solo le aparece GNOME. Dice que "alguien ha estado limpiando programas".
 
 **Tu misión:** averigua qué ha pasado, recupera la sesión perdida sin reinstalar el sistema y demuéstralo iniciando sesión con ella.
+
+🔎 **Comandos que te pueden servir** (búscalos en tus apuntes o en `man` para ver cómo se usan): `ls /usr/share/xsessions` · `dpkg -l` · `/var/log/apt/history.log` · `apt install`
 
 **Pista (léela solo si llevas 15 minutos sin avanzar):** la lista de sesiones de la pantalla de login no es mágica: cada sesión la aporta un paquete instalado. ¿Qué comando de los apuntes te dice qué pasó con un paquete? Y APT guarda un historial de todo lo que instala y desinstala: búscalo en `/var/log/apt/`.
 
@@ -289,6 +318,8 @@ Para cada situación, di qué interfaz elegirías y por qué:
 7. Reinicia y demuestra que `/datos` está montado sin que hayas hecho nada.
 8. Crea en `/datos` una carpeta `documentos` con dos o tres archivos: los vas a necesitar en el reto siguiente.
 
+🔎 **Comandos que te pueden servir** (búscalos en tus apuntes o en `man` para ver cómo se usan): `lsblk` · `parted` · *la aplicación Discos* · `mkfs.ext4` · `blkid` · `nano /etc/fstab` · `systemctl daemon-reload` · `mount -a` · `findmnt --verify`
+
 **Entrega:** capturas de cada paso, la línea exacta que has añadido a `/etc/fstab` explicando cada uno de sus seis campos, y tu justificación sobre `nofail`.
 
 > Este disco lo vas a necesitar en los retos 3.2, 3.3 y en el reto final: no lo borres.
@@ -300,6 +331,8 @@ Para cada situación, di qué interfaz elegirías y por qué:
 **Situación:** el departamento de administración te llama alarmado: "¡La carpeta `/datos` está vacía! Ayer estaba llena de documentos".
 
 **Tu misión:** averigua dónde están los datos. Antes de tocar nada, responde: ¿se han borrado de verdad? Después, arréglalo para que vuelvan a aparecer en `/datos` y demuestra que el arreglo sobrevive a un reinicio.
+
+🔎 **Comandos que te pueden servir** (búscalos en tus apuntes o en `man` para ver cómo se usan): `ls` · `df -h` · `lsblk -f` · `findmnt` · `nano /etc/fstab` · `umount`
 
 **Pista (léela solo si llevas 15 minutos sin avanzar):** recuerda lo que aprendiste en UD01 sobre Linux y los nombres de archivo.
 
@@ -318,6 +351,8 @@ Para cada situación, di qué interfaz elegirías y por qué:
 3. Encuentra el error y corrígelo. Esta vez no es un UUID.
 4. Demuestra que el sistema vuelve a arrancar con normalidad.
 
+🔎 **Comandos que te pueden servir** (búscalos en tus apuntes o en `man` para ver cómo se usan): `journalctl -xb` · *menú de GRUB (tecla e)* · `init=/bin/bash` · `mount -o remount,rw /` · `nano /etc/fstab`
+
 **Para pensar:** ¿habría evitado esta situación la opción `nofail` que investigaste en el reto 3.1? ¿Y el comando `findmnt --verify`? ¿Por qué no es buena idea poner `nofail` en todas las líneas de `fstab`, incluida la del sistema raíz?
 
 **Comprobación:** `sudo bash saboteoControlado.sh --comprobar 3.3` 📸
@@ -335,6 +370,8 @@ grub>
 ```
 
 **Tu misión:** desde esa línea de comandos de GRUB, averigua en qué partición está tu sistema, arráncalo a mano y, una vez dentro, regenera la configuración de GRUB para que el problema no se repita. Investiga los comandos `ls`, `set root`, `linux`, `initrd` y `boot` de GRUB.
+
+🔎 **Comandos que te pueden servir** (búscalos en tus apuntes o en `man` para ver cómo se usan): `ls` · `set root` · `linux` · `initrd` · `boot` · `update-grub`
 
 **Comprobación:** `sudo bash saboteoControlado.sh --comprobar 3.4` 📸, tras reiniciar y ver que el menú de GRUB funciona.
 
@@ -407,6 +444,8 @@ UUID=c4a7e9f2-6b1d-4f3a-8e5c-9d2b7a1f6e08  /proyectos ext4  defautls           0
 
 **Tu misión:** interpreta el error, localiza qué lo provoca, soluciónalo **sin reinstalar nada** y demuestra que `apt update` vuelve a terminar sin errores.
 
+🔎 **Comandos que te pueden servir** (búscalos en tus apuntes o en `man` para ver cómo se usan): `apt update` · `grep -r` · `/etc/apt/sources.list.d/` · `mv`
+
 **Para pensar:** ¿es un problema de tu conexión a Internet o de la configuración del sistema? ¿Cómo lo has distinguido?
 
 **Comprobación:** `sudo bash saboteoControlado.sh --comprobar 4.1` 📸
@@ -424,6 +463,8 @@ UUID=c4a7e9f2-6b1d-4f3a-8e5c-9d2b7a1f6e08  /proyectos ext4  defautls           0
 3. Decide si es seguro detenerlo y, si lo es, hazlo. Resuelve la situación **sin borrar ningún archivo del sistema y sin reiniciar**.
 4. Instala `cowsay`.
 
+🔎 **Comandos que te pueden servir** (búscalos en tus apuntes o en `man` para ver cómo se usan): `ps -p` · `kill`
+
 **Para pensar:** ¿por qué existe ese bloqueo? ¿Qué podría pasar si borras el archivo de bloqueo mientras otro proceso está instalando paquetes? ¿Por qué en este caso era seguro detener el proceso, y en qué caso no lo sería?
 
 **Comprobación:** `sudo bash saboteoControlado.sh --comprobar 4.2` 📸
@@ -435,6 +476,8 @@ UUID=c4a7e9f2-6b1d-4f3a-8e5c-9d2b7a1f6e08  /proyectos ext4  defautls           0
 **Situación:** un usuario te escribe: "He intentado desinstalar un programa multimedia con `sudo apt remove` y me dice que no está instalado, pero sigue apareciendo en el menú de aplicaciones y se abre perfectamente".
 
 **Tu misión:** averigua cuál es el programa y por qué `apt` dice que no está instalado. Desinstálalo por completo, sin dejar datos guardados, y comprueba que ha desaparecido del menú.
+
+🔎 **Comandos que te pueden servir** (búscalos en tus apuntes o en `man` para ver cómo se usan): `apt remove` · `dpkg -l` · `snap list` · `snap remove --purge`
 
 **Comprobación:** `sudo bash saboteoControlado.sh --comprobar 4.3` 📸
 
@@ -510,6 +553,8 @@ Abre el gestor de impresoras (búscalo como "Impresoras") e inicia el asistente 
 
 En cuanto una capa falle, ya sabes dónde buscar. Corrige el problema con el asistente gráfico **o** con `nmcli`, explica por qué has elegido uno u otro, y demuestra que se navega con normalidad.
 
+🔎 **Comandos que te pueden servir** (búscalos en tus apuntes o en `man` para ver cómo se usan): `ip addr` · `ip route` · `ping` · `resolvectl status` · `nmcli connection modify` · *Configuración → Red* · `nmcli connection up`
+
 > Este método de diagnóstico por capas lo vas a volver a usar en el módulo de Redes Locales: no es exclusivo de Linux.
 
 **Comprobación:** `sudo bash saboteoControlado.sh --comprobar 5.1` 📸
@@ -521,6 +566,8 @@ En cuanto una capa falle, ya sabes dónde buscar. Corrige el problema con el asi
 **Situación:** a un equipo con IP estática le han "retocado" la configuración de red. Hace `ping` al equipo de al lado, pero no sale a Internet, ni siquiera por IP.
 
 **Tu misión:** aplica el mismo diagnóstico por capas que en el reto 5.1. Esta vez te será útil el comando `ip route`. Encuentra el error y corrígelo **desde la terminal, con `nmcli`**, sin volver a DHCP: el equipo debe quedarse con IP estática.
+
+🔎 **Comandos que te pueden servir** (búscalos en tus apuntes o en `man` para ver cómo se usan): `ip route` · `ping` · `nmcli connection show` · `nmcli connection modify` · `nmcli connection up`
 
 **Para pensar:** ¿qué dato de la configuración de red de tu VM necesitas conocer para poder corregirlo, y dónde lo has encontrado?
 
@@ -619,6 +666,8 @@ default via 192.168.1.1 dev enp0s3 proto dhcp metric 100
 3. Corrige el problema, **en la línea del crontab y dentro del script**, y demuestra que la copia se crea.
 4. Cuando funcione, cambia la tarea a una hora razonable para que no siga ejecutándose cada dos minutos.
 
+🔎 **Comandos que te pueden servir** (búscalos en tus apuntes o en `man` para ver cómo se usan): `journalctl -u cron` · `crontab -l` · `crontab -e` · `>> archivo.log 2>&1`
+
 **Comprobación:** `sudo bash saboteoControlado.sh --comprobar 6.1` 📸 (antes del paso 4, cuando ya se haya creado alguna copia).
 
 #### Reto 6.2 💻 — Tareas de mantenimiento para un aula
@@ -631,6 +680,8 @@ default via 192.168.1.1 dev enp0s3 proto dhcp metric 100
 4. Una tarea que se ejecute **una única vez**, mañana a las 10:00, y que cree un archivo recordatorio en tu carpeta personal.
 
 Decide en qué crontab va cada tarea (el tuyo o el de root) y justifícalo. Para cada una, explica cómo has comprobado que funciona **sin esperar** a la hora real, con capturas.
+
+🔎 **Comandos que te pueden servir** (búscalos en tus apuntes o en `man` para ver cómo se usan): `crontab -e` · `sudo crontab -e` · `at` · `atq` · `df -h` · `date`
 
 #### Ejercicio 6.3 📝 — Lee y escribe líneas de `crontab`
 
@@ -677,6 +728,8 @@ Tu VM tiene **varias averías a la vez**. No sabes cuántas.
 2. Un resumen de tres o cuatro líneas, sin tecnicismos, para la usuaria: qué pasaba y qué se ha hecho.
 3. Recomendaciones de prevención.
 4. La captura de `sudo bash saboteoControlado.sh --comprobar final`.
+
+🔎 **Comandos que te pueden servir** (búscalos en tus apuntes o en `man` para ver cómo se usan): *todos los que has usado en las fichas 1 a 6: los síntomas del parte te dicen por qué ficha empezar*
 
 **Tiempo orientativo:** dos sesiones.
 
