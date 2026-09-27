@@ -296,6 +296,35 @@ Linux no usa letras de unidad: existe una **única raíz** (`/`), y cualquier di
 
 Las rutas en Linux se separan con la barra `/` (no `\`), y también pueden ser absolutas o relativas, igual que en Windows.
 
+### Subir de nivel en una ruta relativa: `.` y `..`
+
+Hasta ahora, las rutas relativas que has visto siempre "bajaban" desde la carpeta en la que estás hacia una carpeta que está dentro de ella. Pero a menudo el archivo que buscas no está por debajo de ti, sino en una carpeta "hermana" o más arriba en el árbol. Para eso, todo directorio contiene dos nombres especiales, que existen tanto en Linux como en Windows:
+
+- **`.`** (un punto): el propio directorio en el que estás.
+- **`..`** (dos puntos): el **directorio padre**, es decir, el que contiene al directorio en el que estás. Usarlo en una ruta equivale a "subir un nivel".
+
+Fíjate en este árbol:
+
+```
+/
+└── home/
+    └── alumno/
+        ├── documentos/
+        │   └── informe.txt
+        └── practicas/
+            └── ud01/
+```
+
+Si estás en `/home/alumno/practicas` y quieres llegar a `informe.txt`, no puedes bajar directamente: `informe.txt` no está dentro de `practicas`. Primero tienes que subir a `alumno` y desde ahí bajar a `documentos`. La ruta relativa es `../documentos/informe.txt`, que se lee paso a paso así:
+
+1. `..` → subes de `/home/alumno/practicas` a `/home/alumno`.
+2. `documentos` → bajas a `/home/alumno/documentos`.
+3. `informe.txt` → llegas al archivo.
+
+Puedes encadenar varios `..` para subir más de un nivel: desde `/home/alumno/practicas/ud01`, la misma ruta sería `../../documentos/informe.txt` (subes dos niveles, hasta `alumno`, y luego bajas). En Windows funciona exactamente igual, cambiando el separador: `..\Documents\informe.docx`.
+
+Dos ideas para no equivocarte: una ruta relativa **nunca empieza por `/`** en Linux (ni por una letra de unidad en Windows), porque entonces sería absoluta; y el resultado de una ruta relativa **depende de dónde estés**, mientras que una absoluta lleva siempre al mismo sitio. Cuando empieces a usar la terminal de Linux, escribirás `cd ..` constantemente para subir de carpeta: es exactamente este mismo `..`.
+
 ### La diferencia que más suele fallar: mayúsculas y minúsculas
 
 **Windows no distingue mayúsculas de minúsculas** en los nombres de archivo: `Documento.txt` y `documento.txt` son el mismo archivo. **Linux sí distingue**: esos mismos dos nombres serían dos archivos completamente distintos. Esta diferencia es la causa más habitual de que "un comando no funcione" cuando se empieza a trabajar con la terminal de Linux — conviene tenerla muy presente desde ya, antes de que te encuentres con ese problema en la práctica.
@@ -324,6 +353,8 @@ Un archivo oculto **no está protegido** de ningún modo especial: simplemente n
 ```
 
 **Ejemplo resuelto:** ruta absoluta → `/home/alumno/documentos/informe.txt`. Ruta relativa desde `/home/alumno` → `documentos/informe.txt`.
+
+**Actividad (subir de nivel):** con ese mismo árbol, escribe una ruta relativa hasta `informe.txt` suponiendo que partes de `/etc`. Pista: primero tienes que subir hasta la raíz.
 
 **Actividad (mayúsculas):** de estos tres nombres de archivo — `Informe.docx`, `informe.docx`, `INFORME.docx` —, ¿cuántos archivos distintos son en Windows? ¿Y en Linux? Justifica tu respuesta con lo aprendido en este apartado.
 
