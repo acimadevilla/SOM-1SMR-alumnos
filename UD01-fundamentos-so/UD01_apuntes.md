@@ -456,7 +456,36 @@ UTF-8 codifica cada carácter usando entre **1 y 4 bytes**, según lo alto que s
 | U+0800 – U+FFFF | 3 bytes | `1110xxxx 10xxxxxx 10xxxxxx` |
 | U+10000 – U+10FFFF | 4 bytes | `11110xxx 10xxxxxx 10xxxxxx 10xxxxxx` |
 
-Los bits fijos al principio de cada byte (`0`, `110`, `1110`, `11110` para el primer byte de cada carácter, y `10` para los bytes de continuación) son los que permiten a cualquier programa, leyendo un flujo de bytes, saber exactamente dónde empieza y dónde termina cada carácter.
+**Para qué sirven los bits fijos.**
+
+Cuando un programa lee un archivo de texto, no recibe "caracteres": recibe una fila de bytes seguidos, sin ningún separador entre ellos. Si todos los caracteres ocuparan 1 byte, como en ASCII, no habría problema; pero en UTF-8 unos ocupan 1 byte y otros 2, 3 o 4. Así que el programa necesita poder averiguar, mirando solo los bits de cada byte, si ese byte **empieza** un carácter o es la **continuación** de uno anterior, y cuántos bytes ocupa cada carácter. Esa información la llevan escrita los bits fijos del principio de cada byte:
+
+| El byte empieza por... | Significa |
+|---|---|
+| `0` | Carácter completo de 1 byte (un carácter ASCII) |
+| `110` | Empieza un carácter de **2** bytes |
+| `1110` | Empieza un carácter de **3** bytes |
+| `11110` | Empieza un carácter de **4** bytes |
+| `10` | No empieza nada: es la **continuación** de un carácter anterior |
+
+Fíjate en el truco: el número de `1` con que empieza el primer byte coincide con el número de bytes del carácter. Con esta tabla, un programa lee sin ninguna duda esta fila de bytes:
+
+```
+01001000  → empieza por 0   → carácter de 1 byte: 'H'
+11000011  → empieza por 110 → carácter de 2 bytes: este y el siguiente
+10110001  → empieza por 10  → continuación del anterior → juntos forman 'ñ'
+01101111  → empieza por 0   → carácter de 1 byte: 'o'
+```
+
+El resultado es el texto "Hño". (Cómo se obtienen exactamente los bytes de la 'ñ' lo verás en el ejemplo resuelto de más abajo.)
+
+**¿Por qué no aprovechar todos los bits de los bytes de continuación?** Porque entonces un byte de continuación podría tener cualquier valor y se confundiría con otra cosa:
+
+- **Con un carácter ASCII.** Si la segunda mitad de una 'ñ' pudiera empezar por `0`, un programa que busca, por ejemplo, la barra `/` de una ruta podría encontrar una "barra" falsa a mitad de la 'ñ' y cortar ahí el nombre del archivo. En UTF-8 eso es imposible: ningún byte de un carácter de varios bytes empieza por `0`.
+- **Con el principio de otro carácter.** Si una continuación pudiera empezar por `110`, el programa no sabría si es el final de la 'ñ' o el comienzo de un carácter nuevo.
+- **Con todo lo que viene después, si hay un error.** Si se pierde un byte (una descarga cortada, un archivo dañado) o un programa empieza a leer a mitad del texto, le basta con saltar los bytes que empiezan por `10` hasta encontrar uno que no lo haga, y desde ahí vuelve a leer bien. Se estropea solo el carácter dañado, no el resto del texto.
+
+El precio es que se "pierden" algunos bits: un carácter de 2 bytes tiene 16 bits, pero solo 11 sirven para guardar su número; los otros 5 son marcas. Los diseñadores de UTF-8 aceptaron ese coste a cambio de la seguridad que dan esas marcas, y como el texto más habitual es ASCII, que ocupa 1 byte sin ninguna marca extra, en la práctica el coste es pequeño.
 
 **Por qué UTF-8 es compatible con ASCII:** cualquier carácter ASCII (0-127) se codifica en UTF-8 con un único byte, con el mismo valor que ya tenía en ASCII. Es decir, **cualquier texto ASCII ya es, sin cambiar ni un bit, un texto UTF-8 válido** — la razón principal de que UTF-8 se haya impuesto sin romper nada de lo que ya existía.
 
@@ -484,6 +513,32 @@ Cuando un archivo de texto se abre "lleno de símbolos raros" en vez de mostrar 
 > 4. ¿Coincide con tu cálculo? Si el tamaño real es un poco mayor de lo esperado, no te preocupes: puede deberse a un carácter de salto de línea añadido automáticamente al guardar (1-2 bytes más), o a que el editor haya incluido una marca **BOM** al principio del archivo (3 bytes más) — infórmate de qué es un BOM si te encuentras con esta diferencia.
 >
 > **Ejemplo resuelto (cálculo):** `A` (1 byte) + `ñ` (2 bytes) + `o` (1 byte) + espacio (1 byte) + `😀` (4 bytes) = **9 bytes para 5 caracteres**.
+
+> **Para saber más (no entra en el examen): un emoji que ocupa 20 bytes**
+>
+> En clase comprobamos que el emoji de una persona en silla de ruedas mirando a la derecha, 🧑‍🦽‍➡️, ocupa **20 bytes**. ¿Cómo es posible, si UTF-8 usa como mucho 4 bytes por carácter? Porque ese símbolo **no es un carácter: son seis**, que el sistema dibuja como si fueran uno solo:
+>
+> | Code point | Qué es | Bytes en UTF-8 |
+> |---|---|---|
+> | U+1F9D1 | 🧑 persona | 4 |
+> | U+200D | ZWJ, el "pegamento" invisible | 3 |
+> | U+1F9BD | 🦽 silla de ruedas manual | 4 |
+> | U+200D | ZWJ, el "pegamento" invisible | 3 |
+> | U+27A1 | ➡ flecha hacia la derecha | 3 |
+> | U+FE0F | indica "dibújalo como emoji" | 3 |
+> | | **Total** | **20** |
+>
+> La pieza clave es el **ZWJ** (*Zero Width Joiner*, "unión de anchura cero"): un carácter invisible que le dice al sistema "si sabes dibujar esta combinación como un único símbolo, hazlo". Si el sistema conoce la combinación, ves un solo emoji; si no la conoce (por ejemplo, un sistema antiguo), ves las piezas por separado: 🧑🦽➡️. De hecho, según el programa con el que estés leyendo estos apuntes, puede que en este recuadro veas el emoji partido en sus piezas: es justo lo que se está explicando. Así se construyen muchos emojis: las familias, los tonos de piel, las profesiones o las banderas. La versión sin flecha, 🧑‍🦽, ocupa 11 bytes; la flecha "invisible" añade 9.
+>
+> Esto demuestra que hay tres cosas distintas que solemos llamar "carácter":
+>
+> | Nivel | Qué es | En este emoji |
+> |---|---|---|
+> | Lo que ves en pantalla | El símbolo | 1 |
+> | Code points | Los "caracteres" de Unicode | 6 |
+> | Bytes | Lo que ocupa guardado en UTF-8 | 20 |
+>
+> Cuando los apuntes dicen que UTF-8 usa "de 1 a 4 bytes por carácter", se refieren a cada **code point**. Y tiene consecuencias prácticas: un campo de un formulario que admite "como máximo 10 caracteres" puede estar contando bytes, code points o símbolos, según cómo se haya programado. Por eso algunas webs rechazan un nombre con un emoji, o lo cortan por la mitad y dejan un símbolo roto.
 
 ### Sistema octal: por qué nos interesa aquí
 
