@@ -428,7 +428,7 @@ UUID=c4a7e9f2-6b1d-4f3a-8e5c-9d2b7a1f6e08  /proyectos ext4  defautls           0
 2. `sudo dpkg -i paquete-practica.deb` — la instalación fallará indicando que falta una dependencia. 📸 **G4.3-a** con el mensaje.
 3. `sudo apt --fix-broken install` 📸 **G4.3-b**
 4. `dpkg -l | grep paquete-practica` — comprueba que ahora aparece como `ii`. 📸 **G4.3-c**
-5. Si la dependencia resuelta es `cowsay`, pruébala: `cowsay "¡Ya funciona!"`.
+5. Prueba la dependencia que se ha instalado, `cowsay "¡Ya funciona!"`, y el comando que instala el propio paquete: `saludo-smr`.
 
 **Reflexiona (respuesta escrita):** ¿por qué `dpkg -i` por sí solo no ha sido capaz de resolver la dependencia que faltaba, mientras que `apt` sí lo consigue?
 
@@ -454,14 +454,14 @@ UUID=c4a7e9f2-6b1d-4f3a-8e5c-9d2b7a1f6e08  /proyectos ext4  defautls           0
 
 **Preparación:** `sudo bash saboteoControlado.sh 4.2`
 
-**Situación:** vas a instalar `cowsay` y `apt` no avanza: se queda esperando, o se niega, con un mensaje que habla de un "bloqueo" (*lock*). Un compañero te dice: "Eso se arregla borrando el archivo de bloqueo, lo he visto en un foro".
+**Situación:** vas a instalar `figlet` (un pequeño programa que escribe texto en letras grandes en la terminal) y `apt` no avanza: se queda esperando, o se niega, con un mensaje que habla de un "bloqueo" (*lock*). Un compañero te dice: "Eso se arregla borrando el archivo de bloqueo, lo he visto en un foro".
 
 **Tu misión:**
 
 1. Lee el mensaje de error completo. Contiene una pista muy concreta: ¿cuál?
 2. Averigua qué proceso está provocando el bloqueo y qué está haciendo. Te ayudará el comando `ps -p <número> -o pid,user,tty,etime,cmd`.
 3. Decide si es seguro detenerlo y, si lo es, hazlo. Resuelve la situación **sin borrar ningún archivo del sistema y sin reiniciar**.
-4. Instala `cowsay`.
+4. Instala `figlet` y pruébalo: `figlet SMR`.
 
 🔎 **Comandos que te pueden servir** (búscalos en tus apuntes o en `man` para ver cómo se usan): `ps -p` · `kill`
 

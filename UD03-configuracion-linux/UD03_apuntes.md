@@ -314,7 +314,7 @@ Cuando descargas un archivo `.deb` manualmente, sin pasar por un repositorio, se
 > 2. `sudo dpkg -i paquete-practica.deb` — la instalación va a fallar, indicando que falta una dependencia. Lee el mensaje con atención: ¿qué paquete dice que necesita?
 > 3. `sudo apt --fix-broken install` — deja que APT localice e instale esa dependencia desde los repositorios, y termine de configurar el paquete pendiente.
 > 4. `dpkg -l | grep paquete-practica` — comprueba que ahora aparece correctamente instalado ("ii", no "iF" ni "rc").
-> 5. Si la dependencia resuelta es `cowsay`, pruébala: `cowsay "¡Ya funciona!"`.
+> 5. Prueba la dependencia que se ha instalado, `cowsay "¡Ya funciona!"`, y el comando que instala el propio paquete: `saludo-smr`.
 >
 > **Reflexiona:** ¿por qué `dpkg -i` por sí solo no ha sido capaz de resolver la dependencia que faltaba, mientras que `apt` sí lo consigue automáticamente?
 
