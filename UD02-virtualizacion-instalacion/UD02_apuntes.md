@@ -154,13 +154,53 @@ No existe "el mejor sistema operativo" en abstracto — depende de para qué se 
 
 **Ejemplos:** un servidor web suele elegir Linux (ligero, gratuito, gran soporte de comunidad); un puesto de oficina que depende de software específico de Windows (contabilidad, diseño con herramientas concretas) elige Windows; un equipo con hardware muy limitado se beneficia de una distribución Linux ligera.
 
-### Particionado: MBR frente a GPT
+### Estilos de partición: MBR frente a GPT
 
-**MBR (Master Boot Record)** es el esquema de particionado tradicional, en uso desde los años 80: máximo 4 particiones primarias (o 3 primarias + 1 extendida, que puede contener varias particiones lógicas dentro), límite de 2 TiB por disco, arranque mediante BIOS tradicional.
+Antes de crear particiones, un disco necesita una **tabla de particiones**: una pequeña estructura, guardada al principio del disco, que dice dónde empieza y dónde termina cada partición. La forma de organizar esa tabla se llama **estilo de partición** (o esquema de particionado), y hoy conviven dos: MBR y GPT. Es una decisión que se toma al preparar el disco, antes de instalar, y que condiciona cómo va a arrancar el equipo.
 
-**GPT (GUID Partition Table)** es el esquema moderno: hasta 128 particiones sin necesidad de particiones extendidas, sin el límite práctico de 2 TiB de MBR, y con una copia de seguridad de su propia tabla de particiones al final del disco (más resistente a corrupción). Requiere **UEFI** para arrancar desde él con todas sus ventajas.
+**MBR (*Master Boot Record*, registro de arranque principal)** es el estilo clásico, creado para los primeros PC de IBM en 1983. Toda la información cabe en el **primer sector del disco** (512 bytes), que contiene a la vez dos cosas: un pequeño programa de arranque y la tabla de particiones, con espacio para solo **cuatro entradas**. De ahí salen sus limitaciones:
 
-**Por qué importa esta decisión:** Windows 11, con Secure Boot activado, **exige GPT** — no se puede instalar sobre un disco en MBR. Linux funciona perfectamente con cualquiera de los dos. Recomendación práctica: usa **GPT siempre que sea posible**, salvo que necesites compatibilidad específica con sistemas muy antiguos sin UEFI.
+- **Máximo 4 particiones primarias.** Para tener más, una de ellas se convierte en **partición extendida**, que hace de "contenedor" de **particiones lógicas**. Funciona, pero es un apaño.
+- **Máximo 2 TiB por disco** (con sectores de 512 bytes): la tabla usa números de 32 bits para indicar en qué sector empieza cada partición, y 2³² sectores × 512 bytes = 2 TiB. Un disco de 4 TB con MBR solo puede aprovechar la mitad.
+- **Un único punto de fallo:** la tabla está en un solo sector, sin copia. Si ese sector se daña o lo sobrescribe un virus de arranque, el disco parece vacío, aunque los datos sigan ahí.
+
+**GPT (*GUID Partition Table*, tabla de particiones con identificadores únicos)** es el estilo moderno. Nació como parte de la especificación **UEFI**, el firmware que sustituyó a la BIOS, y resuelve todos esos problemas:
+
+- **Hasta 128 particiones** en Windows, todas iguales. No hay primarias, extendidas ni lógicas.
+- **Sin límite práctico de tamaño:** usa números de 64 bits, suficientes para discos de miles de millones de terabytes.
+- **Más robusto:** guarda una **copia de la tabla al final del disco** y comprueba su integridad con una suma de control (CRC32). Si la tabla principal se daña, se recupera de la copia.
+- **Cada partición tiene un identificador único (GUID)** y un tipo, también en forma de GUID, que dice para qué sirve: sistema EFI, datos de Windows, raíz de Linux...
+- El primer sector conserva un **MBR de protección** (*protective MBR*): una tabla falsa que dice "todo el disco está ocupado", para que una herramienta antigua que no entienda GPT no crea que el disco está vacío y lo borre.
+
+### MBR, GPT y la forma de arrancar: BIOS frente a UEFI
+
+El estilo de partición no es una decisión aislada: va unido al **firmware** del equipo, el programa grabado en la placa base que se ejecuta nada más encenderlo.
+
+| | BIOS (o UEFI en modo heredado, CSM) | UEFI |
+|---|---|---|
+| Cómo arranca | Lee el **primer sector** del disco (el MBR) y ejecuta el pequeño programa que hay ahí, que a su vez carga el gestor de arranque | Lee una **partición especial (ESP)** y ejecuta el **archivo** del gestor de arranque que le indica su lista de entradas de arranque |
+| Estilo de partición asociado | MBR | GPT |
+| Arranque seguro (*Secure Boot*) | No existe | Comprueba que el gestor de arranque está firmado digitalmente, para impedir que arranque software manipulado |
+
+**La regla práctica, en Windows:** Windows instalado en modo UEFI **solo** arranca desde un disco GPT, y en modo BIOS **solo** desde un disco MBR. Linux es más flexible, y puede arrancar desde GPT incluso con BIOS si se crea una pequeña partición especial, pero la combinación habitual también es UEFI + GPT.
+
+De ahí sale el error que vas a ver alguna vez al instalar Windows: *"Windows no se puede instalar en este disco. El disco seleccionado tiene una tabla de particiones MBR. En sistemas EFI, Windows solo se puede instalar en discos GPT."* No significa que el disco esté mal: significa que el equipo arrancó el instalador en modo UEFI y el disco está en MBR. Las soluciones son convertir el disco a GPT (si está vacío, el propio instalador lo hace al borrar todas sus particiones) o, mucho peor, arrancar el instalador en modo heredado.
+
+### Por qué hoy se usa GPT
+
+- **Windows 11 exige UEFI** (además de arranque seguro y TPM 2.0), y con UEFI Windows solo se instala en GPT. En la práctica, **Windows 11 implica GPT**.
+- Los fabricantes han ido **eliminando el modo heredado (CSM)** de las placas base: muchos equipos actuales ya no pueden arrancar en modo BIOS.
+- Los discos de más de 2 TB son ya habituales, y con MBR no se pueden aprovechar enteros.
+- GPT es más robusto (copia de seguridad de la tabla) y más sencillo (sin particiones extendidas ni lógicas).
+
+MBR sigue teniendo sentido en casos concretos: equipos antiguos sin UEFI y algunos pendrives o tarjetas pequeñas que tienen que funcionar en dispositivos antiguos (cámaras, televisores, equipos de música). **Recomendación profesional: GPT siempre, salvo que haya una razón concreta de compatibilidad.**
+
+**Cómo saber qué estilo y qué firmware usa un equipo:**
+- **Windows:** `msinfo32` → "Modo de BIOS" (UEFI o Heredado). En **Administración de discos**, clic derecho sobre el disco → **Propiedades** → pestaña **Volúmenes** → "Estilo de partición".
+- **Linux:** `sudo fdisk -l` muestra "Disklabel type: gpt" (GPT) o "dos" (MBR). Si existe la carpeta `/sys/firmware/efi`, el sistema ha arrancado en modo UEFI.
+- **VirtualBox:** en **Configuración → Sistema → Placa base**, la casilla **Habilitar EFI** decide si la VM usa firmware UEFI o BIOS. Para Windows 11 tiene que estar activada.
+
+**¿Se puede cambiar de MBR a GPT?** Sí, pero con cuidado. La forma sencilla (`convert gpt` en `diskpart`) **solo funciona con el disco vacío**: hay que borrar antes todas las particiones. Windows incluye `mbr2gpt`, que convierte el disco del sistema sin perder datos, pero con condiciones (como máximo tres particiones, entre otras) y obliga a cambiar después el firmware de BIOS a UEFI. Antes de cualquier conversión, copia de seguridad.
 
 ### Dónde vive el gestor de arranque en GPT: la partición ESP
 
@@ -225,12 +265,122 @@ Mismo procedimiento, con sus particularidades: arrancar desde la ISO, elegir idi
 
 ### Cómo crear una cuenta local en Windows 11
 
-Las versiones más recientes de Windows 11 ocultan deliberadamente la opción de cuenta local y prácticamente obligan a iniciar sesión con una cuenta Microsoft durante la configuración inicial. No es una limitación técnica: es una decisión comercial de Microsoft para fomentar el uso de su ecosistema (OneDrive, sincronización en la nube, Microsoft 365...). Dos formas de conseguir una cuenta local:
+Las versiones recientes de Windows 11 ocultan la opción de **cuenta local** (una cuenta que solo existe en ese equipo) y empujan a iniciar sesión con una **cuenta Microsoft** (vinculada a un correo y sincronizada en la nube) durante la configuración inicial, la fase llamada **OOBE** (*Out-Of-Box Experience*, las pantallas azules que aparecen tras la copia de archivos). No es una limitación técnica, sino una decisión comercial de Microsoft para fomentar su ecosistema: OneDrive, sincronización, Microsoft 365...
 
-1. **Sin conexión de red.** En la pantalla "Vamos a conectarte a una red", si no hay ninguna red disponible (o desconectas el adaptador de red de la VM antes de llegar aquí), a veces aparece "No tengo internet" → "Continuar con configuración limitada", que sí crea una cuenta local. En versiones muy recientes puede no aparecer a la primera.
-2. **El comando `bypassnro`.** En esa misma pantalla, pulsa **Mayús + F10** para abrir una ventana de símbolo del sistema, escribe `oobe\bypassnro` y pulsa Intro. El equipo se reinicia y retoma la configuración saltándose el requisito de conexión obligatoria, recuperando la opción de continuar sin red.
+En el aula vas a usar **cuenta local**: no tiene sentido vincular tu cuenta personal a una VM de prácticas, y en una empresa es lo habitual en equipos que se gestionan de forma centralizada. Estas son las formas de conseguirla, de la más directa a la menos:
 
-**Aviso:** Microsoft cambia este comportamiento entre versiones de Windows con cierta frecuencia — el método exacto puede variar según la build que estés instalando. Es, en sí mismo, un buen ejemplo real de "incidencia de instalación": lo que funciona hoy puede no funcionar igual dentro de unos meses.
+1. **El comando `start ms-cxh:localonly`.** Cuando el asistente te pida iniciar sesión con una cuenta Microsoft, pulsa **Mayús + F10**. Se abre una ventana de símbolo del sistema. Escribe `start ms-cxh:localonly` y pulsa Intro: aparece directamente la ventana **"Crear un usuario para este equipo"**, en la que introduces el nombre de usuario, la contraseña y las tres preguntas de seguridad. Al terminar, la instalación continúa con esa cuenta local.
+2. **Sin conexión de red.** Si desconectas el adaptador de red de la VM antes de llegar a la pantalla "Vamos a conectarte a una red", en algunas versiones aparece **"No tengo internet" → "Continuar con configuración limitada"**, que crea una cuenta local.
+3. **El comando `oobe\bypassnro`** (Mayús + F10 en la pantalla de red). Era el método clásico, pero Microsoft lo ha retirado de las versiones más recientes de Windows 11. Si lo encuentras en un tutorial, ya sabes por qué puede no funcionarte.
+
+**Aviso:** Microsoft cambia este comportamiento con frecuencia entre versiones, y ha anunciado que irá cerrando estos atajos, incluido `ms-cxh:localonly`. Que un método funcione o no depende de la compilación exacta de tu ISO. Si ninguno funciona, no uses una cuenta Microsoft personal: la solución oficial, que no depende de estos atajos, es el **archivo de respuestas** del apartado especial que viene a continuación. Es, en sí mismo, un ejemplo real de **incidencia de instalación**: lo que funciona hoy puede dejar de funcionar dentro de unos meses, y por eso un técnico documenta siempre qué método ha usado y con qué versión.
+
+### Apartado especial: instalación desatendida de Windows 11
+
+Hasta ahora has instalado Windows **pantalla a pantalla**, respondiendo cada pregunta del asistente. Para una VM de prácticas está bien. Pero piensa en un técnico que tiene que preparar las 30 máquinas de un aula, o los 200 portátiles de una empresa: hacerlo a mano llevaría días, y además cada equipo acabaría configurado de forma ligeramente distinta según quién lo instalara.
+
+La solución es la **instalación desatendida** (*unattended installation*): una instalación en la que las respuestas a las preguntas del asistente se dan **por adelantado, en un archivo**, y el programa de instalación las aplica solo, sin que nadie esté delante. Es como se despliega Windows en el mundo profesional, y también lo que resuelve de forma limpia y oficial el problema de la cuenta Microsoft del apartado anterior.
+
+#### Cómo funciona: el archivo de respuestas
+
+Ese archivo se llama **archivo de respuestas** (*answer file*). Es un archivo de texto en formato **XML**: un formato en el que la información se organiza en **etiquetas** que se abren y se cierran, `<Etiqueta>valor</Etiqueta>`, y que pueden ir unas dentro de otras.
+
+Lo que hace que funcione sin tocar nada es su **nombre**. Cuando arranca, el programa de instalación de Windows busca un archivo llamado exactamente **`autounattend.xml`** en la **raíz de todas las unidades extraíbles** del equipo (USB, DVD, otras unidades ópticas de la VM). Si lo encuentra, lo usa.
+
+La instalación de Windows pasa por varias **fases** (*configuration passes*), y el archivo de respuestas puede dar órdenes para cada una por separado. Las tres que más te interesan:
+
+| Fase | Cuándo ocurre | Ejemplos de lo que se puede automatizar |
+|---|---|---|
+| `windowsPE` | Al principio, desde la ISO, antes de copiar Windows | Idioma, edición, clave de producto, **particionado del disco** |
+| `specialize` | En el primer arranque, ya desde el disco | Nombre del equipo, unirse a un dominio, configuración de red |
+| `oobeSystem` | La **configuración inicial** (las pantallas azules del final) | **Cuentas de usuario**, zona horaria, privacidad, saltar la cuenta Microsoft |
+
+Un archivo de respuestas no tiene por qué automatizarlo todo: **puede contener solo una fase**. El que vas a usar en clase solo tiene `oobeSystem`, así que el idioma, la edición y el particionado los sigues haciendo tú a mano, y solo se automatiza la parte de la cuenta.
+
+#### Un archivo de respuestas mínimo, explicado
+
+Este es el archivo que te facilitará tu profesor o profesora (sin los comentarios):
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<unattend xmlns="urn:schemas-microsoft-com:unattend"
+          xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+  <settings pass="oobeSystem">
+    <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+      <OOBE>
+        <HideOnlineAccountScreens>true</HideOnlineAccountScreens>
+        <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+        <HideEULAPage>true</HideEULAPage>
+        <ProtectYourPC>3</ProtectYourPC>
+      </OOBE>
+      <UserAccounts>
+        <LocalAccounts>
+          <LocalAccount wcm:action="add">
+            <Name>alumno</Name>
+            <DisplayName>Alumno SOM</DisplayName>
+            <Group>Administradores</Group>
+            <Password>
+              <Value>Som2026!</Value>
+              <PlainText>true</PlainText>
+            </Password>
+          </LocalAccount>
+        </LocalAccounts>
+      </UserAccounts>
+      <TimeZone>Romance Standard Time</TimeZone>
+    </component>
+  </settings>
+</unattend>
+```
+
+Leído de fuera hacia dentro:
+
+- **`<unattend>`** es la etiqueta raíz de todo archivo de respuestas.
+- **`<settings pass="oobeSystem">`** indica que lo de dentro se aplica en la fase de configuración inicial.
+- **`<component name="Microsoft-Windows-Shell-Setup" ...>`** dice a qué parte de Windows van dirigidos los ajustes. Los atributos de esta línea son siempre iguales para Windows de 64 bits. Lo único que cambia de un equipo a otro es `processorArchitecture`: `amd64` para procesadores Intel/AMD y `arm64` para equipos ARM.
+- **`<OOBE>`** agrupa las pantallas de la configuración inicial:
+  - `HideOnlineAccountScreens` oculta las pantallas de cuenta Microsoft;
+  - `HideWirelessSetupInOOBE`, la de conectarse a una red wifi;
+  - `HideEULAPage`, el contrato de licencia (ya aceptado al instalar);
+  - `ProtectYourPC` con el valor `3`, las preguntas de privacidad (no aplica la configuración "recomendada" de envío de datos).
+- **`<LocalAccount>`** crea una **cuenta local** con su nombre de usuario (`Name`), el nombre que se muestra (`DisplayName`), el **grupo** al que pertenece y su contraseña. El grupo se escribe **en el idioma de Windows**: `Administradores` en un Windows en español, `Administrators` en uno en inglés.
+- **`<TimeZone>`** fija la zona horaria. `Romance Standard Time` es el nombre interno de la zona de Madrid.
+
+**Fíjate en la contraseña:** está escrita **en texto plano** (`PlainText` a `true`). Algunas herramientas la guardan "codificada" en Base64, pero eso no es cifrado: cualquiera puede descodificarla en segundos. Un archivo de respuestas es, por tanto, un **documento sensible**. En una empresa se protege como cualquier otra credencial, y después de instalar se cambia la contraseña.
+
+#### Opción 1: escribir o generar el archivo tú mismo
+
+- **A mano**, partiendo de un ejemplo como el anterior. Es la mejor forma de entender qué hace cada línea, pero un error de una sola letra en una etiqueta hace que el programa de instalación ignore el ajuste o se detenga con un error.
+- **Con el Administrador de imágenes de sistema de Windows** (*Windows System Image Manager*, WSIM): la herramienta oficial de Microsoft, incluida en el **Windows ADK** (*Assessment and Deployment Kit*). Abre la imagen de Windows, muestra todos los ajustes posibles organizados por fase y componente, y comprueba que el archivo es válido. Es la que se usa en entornos profesionales.
+- **Con un generador web**, como el *Unattend Generator* de Christoph Schneegans (schneegans.de): un formulario en el que marcas opciones (idioma, cuentas, particionado, aplicaciones que quitar...) y te descarga el `autounattend.xml`. Es muy cómodo, pero es una web de terceros: **no escribas contraseñas reales** en ella, usa una provisional y cámbiala después.
+
+#### Opción 2: herramientas que lo preparan por ti
+
+- **Rufus**, el programa más usado para crear USB de instalación, pregunta al crear un USB de Windows 11 si quieres **eliminar el requisito de cuenta Microsoft en línea** y **crear una cuenta local** con un nombre de usuario. Lo que hace por dentro es escribir un archivo de respuestas en el USB. Sirve para equipos reales.
+- **La instalación desatendida de VirtualBox**, la que en la Práctica 2 te pedimos desactivar, también genera su propio archivo de respuestas, con el usuario y la contraseña que indicas en el asistente. Su inconveniente para aprender es que automatiza **toda** la instalación, también el particionado.
+
+#### Cómo se usa en una VM de VirtualBox
+
+El archivo tiene que estar en la raíz de una unidad extraíble. En una VM, lo más sencillo es meterlo en una **ISO pequeña** y montarla como **segunda unidad óptica**:
+
+1. Con la VM apagada, **Configuración → Almacenamiento** → en el controlador, **Añadir unidad óptica** → elige la ISO del archivo de respuestas. La ISO de Windows 11 sigue en la primera unidad, que es desde la que arranca la VM.
+2. Instala con normalidad. Al llegar a la configuración inicial, las pantallas de cuenta Microsoft, wifi y privacidad no aparecen, y Windows inicia sesión directamente con la cuenta local del archivo.
+3. Comprueba en una terminal con `whoami` (el usuario con el que has entrado) y con `net user` (las cuentas locales del equipo).
+4. Quita la segunda unidad óptica y cambia la contraseña.
+
+Para crear tu propia ISO con un archivo de respuestas, desde Ubuntu basta con un comando: `genisoimage -J -r -V RESPUESTAS -o respuestas.iso carpeta/`, donde `carpeta/` contiene el `autounattend.xml`. En un equipo real, basta con copiar el archivo a la raíz del USB de instalación de Windows.
+
+> **Vamos a practicar (opcional): una instalación de Windows 11 sin la pantalla de cuenta**
+>
+> **Paso a paso:**
+>
+> 1. Crea una VM nueva y temporal, `Apellido-UD02-Desatendida`, con la ISO de Windows 11 y la instalación desatendida **de VirtualBox desactivada**, igual que en la Práctica 2.
+> 2. Añádele una segunda unidad óptica con la ISO del archivo de respuestas que te facilitará tu profesor o profesora.
+> 3. Instala Windows haciendo a mano el particionado, y observa qué pantallas de la configuración inicial ya no aparecen.
+> 4. Cuando termine, ejecuta `whoami` y `net user` y comprueba que la cuenta `alumno` existe y pertenece a los administradores (`net localgroup Administradores`).
+> 5. Elimina la VM con **Eliminar todos los archivos**: ocupa más de 20 GB.
+>
+> **Reflexiona:** en el paso 3 el particionado lo has hecho tú, pero la cuenta no. ¿Por qué? ¿Qué tendrías que añadir al archivo para que tampoco te preguntara por el particionado, y en qué fase iría? Y si tuvieras que preparar las 30 VMs del aula, ¿qué ventajas tendría usar este archivo frente a hacerlo a mano en cada una?
 
 ### El gestor de arranque: GRUB, Windows Boot Manager y dual boot
 
