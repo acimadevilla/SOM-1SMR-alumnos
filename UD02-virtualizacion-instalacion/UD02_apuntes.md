@@ -115,7 +115,7 @@ Si tu equipo tiene Windows Pro o Enterprise, puede tener disponible **Hyper-V**,
 
 ### Para practicar
 
-**Actividad:** instala VirtualBox y el Extension Pack en tu equipo, siguiendo el procedimiento visto en clase. Comprueba que el Extension Pack ha quedado instalado correctamente (Archivo → Preferencias → Extensiones). Después, crea una máquina virtual **vacía** (sin instalar ningún sistema operativo todavía) con un nombre identificable — por ejemplo, `TuApellido-UD02-Pruebas` —, indicando solo el tipo y la versión del sistema operativo que instalarás más adelante.
+**Actividad:** instala VirtualBox y el Extension Pack en tu equipo, siguiendo el procedimiento visto en clase. Comprueba que el Extension Pack ha quedado instalado correctamente en la herramienta de paquetes de extensión del Gestor de VirtualBox (**Archivo → Herramientas**, *Extension Pack Manager* en la interfaz en inglés). En VirtualBox 6, que todavía aparece en muchos tutoriales, estaba en Archivo → Preferencias → Extensiones. Después, crea una máquina virtual **vacía** (sin instalar ningún sistema operativo todavía) con un nombre identificable — por ejemplo, `TuApellido-UD02-Pruebas` —, indicando solo el tipo y la versión del sistema operativo que instalarás más adelante.
 
 **Por qué importa el nombre:** en cuanto tengas varias máquinas virtuales, un nombre como "VM1" o "prueba" no te va a servir de nada — nombrar bien tus VMs desde el principio es una práctica profesional real, no un capricho de la ficha.
 
@@ -455,14 +455,22 @@ A diferencia de cuando creaste la VM (donde asignaste RAM/CPU antes de instalar 
 
 ### Repaso de los modos de red: práctica de comparación real
 
-Recupera la tabla de modos de red del epígrafe 3 y, con tus dos VMs ya instaladas, comprueba **con datos reales** lo que hasta ahora solo habías visto en teoría:
+Recupera la tabla de modos de red del epígrafe 3 y, con tus dos VMs ya instaladas, comprueba **con datos reales** lo que hasta ahora solo habías visto en teoría. Vas a probar los **cinco modos**: NAT, Red NAT, Adaptador puente, Solo anfitrión y Red interna.
 
-1. Configura cada VM en un modo de red distinto (empieza por NAT en ambas, el modo por defecto).
-2. En cada VM, obtén su dirección IP: `ipconfig` en Windows, `ip addr` (o `ifconfig`) en Linux.
-3. Comprueba si una VM hace `ping` a la otra.
-4. Comprueba si cada VM tiene salida a internet (`ping 8.8.8.8`, o abre un navegador).
-5. Repite cambiando el modo de red de ambas VMs a **Red interna**, y después a **Adaptador puente** — anota en cada caso qué IP obtiene cada una, si se ven entre sí, y si tienen internet.
-6. Contrasta lo que has obtenido con lo que predecía la tabla teórica del epígrafe 3. Si algo no coincide, no lo apuntes sin más: averigua por qué.
+**Antes de empezar, tres preparativos**, porque sin ellos obtendrías resultados engañosos:
+
+- **El cortafuegos de Windows bloquea el `ping` entrante** por defecto. Si no lo permites, el `ping` de Ubuntu a Windows fallará en todos los modos, aunque la red esté bien, y concluirías que "no se ven". En la VM Windows, abre `wf.msc` → **Reglas de entrada** → **Compartir archivos e impresoras (petición de eco: ICMPv4 de entrada)** → **Habilitar regla**. Lo entenderás a fondo en UD04.
+- **La Red NAT hay que crearla antes** en VirtualBox: **Archivo → Herramientas → Administrador de red → Redes NAT → Crear**.
+- **En la Red interna no hay ningún servidor DHCP** (el servicio que reparte direcciones IP automáticamente), así que ninguna VM recibirá IP si no se la pones tú. Asigna a mano una **IP estática** del mismo rango a cada una, por ejemplo `192.168.100.10/24` y `192.168.100.20/24`, y vuelve a la configuración automática al terminar.
+
+**Para cada modo:**
+
+1. Pon **las dos VMs** en ese modo (**Configuración → Red → Adaptador 1 → Conectado a**). En Red NAT, Red interna y Solo anfitrión, elige también la misma red en las dos.
+2. En cada VM, obtén su dirección IP: `ipconfig` en Windows, `ip a` en Linux.
+3. Comprueba si cada VM hace `ping` a la otra, **en los dos sentidos**. En Linux, `ping -c 4 <IP>` se detiene solo tras cuatro intentos.
+4. Comprueba si cada VM tiene salida a internet: `ping 8.8.8.8` (conexión) y `ping www.google.es` (también resolución de nombres).
+5. Desde tu equipo anfitrión, haz `ping` a la IP de cada VM.
+6. Contrasta lo que has obtenido con lo que predecía la tabla teórica del epígrafe 3. Si algo no coincide, no lo apuntes sin más: averigua por qué. Por ejemplo, en modo NAT las dos VMs suelen recibir **la misma IP** (`10.0.2.15`) y, aun así, no se ven. ¿Por qué?
 
 ### Relación VM-anfitrión: Guest Additions y carpetas compartidas
 
@@ -475,7 +483,7 @@ Una **carpeta compartida** es una carpeta de tu equipo anfitrión a la que la VM
 **Actividad:**
 
 1. Actualiza completamente ambas VMs y toma una instantánea con nombre "Post-actualización" en cada una al terminar.
-2. Realiza la práctica de comparación de modos de red descrita arriba, probando al menos tres modos distintos, y completa una tabla con: modo de red, IP obtenida por cada VM, si hacen ping entre sí, si tienen salida a internet.
+2. Realiza la práctica de comparación de modos de red descrita arriba con los **cinco modos**, y completa una tabla con: modo de red, IP de cada VM, `ping` entre ellas en los dos sentidos, salida a internet y `ping` desde el anfitrión. Es la base de la Práctica 5.
 3. Configura una carpeta compartida entre tu equipo anfitrión y una de las VMs, y copia un archivo de prueba en ambos sentidos.
 
 ---
