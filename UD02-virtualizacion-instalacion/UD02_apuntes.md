@@ -111,7 +111,37 @@ El **Gestor de VirtualBox** es la ventana principal: muestra la lista de máquin
 
 Si tu equipo tiene Windows Pro o Enterprise, puede tener disponible **Hyper-V**, el hipervisor propietario de Microsoft. A diferencia de VirtualBox, Hyper-V no se "instala" como un programa tradicional: se **activa como característica de Windows** (Panel de control → Programas → Activar o desactivar las características de Windows). Sigue siendo instalar software, solo que empaquetado de otra forma según el fabricante y su modelo de licencia.
 
-**Importante:** VirtualBox y Hyper-V pueden entrar en conflicto si están activos a la vez, porque ambos compiten por el mismo mecanismo de virtualización de hardware de Windows — es habitual tener que desactivar uno para que el otro funcione con normalidad.
+### VirtualBox y el hipervisor de Windows: la "tortuga"
+
+Hyper-V y VirtualBox necesitan el mismo recurso: la **virtualización por hardware del procesador** (VT-x/AMD-V). Solo un hipervisor puede controlarla a la vez. Si el **hipervisor de Windows** está en marcha, VirtualBox no puede usarla directamente y pasa a funcionar **a través de él**, en un modo mucho más lento. Las VMs siguen arrancando, pero todo va muy despacio, y la instalación de Windows 11 puede eternizarse o quedarse con la pantalla en negro tras el primer reinicio.
+
+**Cómo se reconoce:** con la VM en marcha, en la barra de estado de su ventana (abajo a la derecha) aparece una **tortuga verde**. Al hacer clic sobre ella, la línea **"Motor de ejecución"** dice **"API nativa"**. Cuando todo va bien, en su lugar aparece un **chip azul con una "V"** y el motor de ejecución dice **"VT-x/AMD-V"**.
+
+> **No te confundas:** en esa misma información aparece la línea "Interfaz de paravirtualización: Hyper-V". Es **normal** en una VM con Windows y no indica ningún problema: es la forma en que VirtualBox se presenta ante el Windows de dentro de la VM para que funcione mejor. La línea que importa es la del motor de ejecución.
+
+**Por qué sigue saliendo aunque desmarques Hyper-V.** El hipervisor de Windows no lo arranca solo Hyper-V. También lo cargan:
+- la **Plataforma de máquina virtual** (la usa WSL 2);
+- la **Plataforma del hipervisor de Windows**;
+- el **Espacio aislado de Windows**;
+- el **Subsistema de Windows para Linux** (WSL 2);
+- y, sobre todo, la **seguridad basada en virtualización** con la **integridad de memoria**, una protección del núcleo que Windows 11 trae **activada por defecto** en muchos equipos y que no aparece en "Características de Windows".
+
+**Cómo quitar la tortuga.** Todo se hace en el equipo **anfitrión**, con una cuenta de **administrador**:
+
+1. **Comprueba si el hipervisor está activo:** `msinfo32` → "Seguridad basada en virtualización". Si pone "En ejecución", lo está. Con `systeminfo`, la salida termina con "Se ha detectado un hipervisor".
+2. **Desmarca las características que lo cargan:** `optionalfeatures` → Hyper-V, Plataforma de máquina virtual, Plataforma del hipervisor de Windows, Espacio aislado de Windows y Subsistema de Windows para Linux.
+3. **Desactiva la integridad de memoria:** Seguridad de Windows → Seguridad del dispositivo → Aislamiento del núcleo → Integridad de memoria.
+4. **Impide que el hipervisor arranque**, el paso más eficaz, en una terminal de administrador: `bcdedit /set hypervisorlaunchtype off`. Se deshace con `bcdedit /set hypervisorlaunchtype auto`.
+5. **Reinicia el equipo:** ningún cambio surte efecto hasta reiniciar.
+6. **Comprueba el resultado:** la tortuga ha cambiado por el chip azul, el motor de ejecución dice "VT-x/AMD-V" y `systeminfo` termina con la lista "Requisitos de Hyper-V".
+
+> **Comandos listos para copiar y pegar:** el anexo `UD02_anexo_tortuga` recoge el diagnóstico completo, los comandos para desactivar también la **seguridad basada en virtualización** y **Credential Guard** (que pueden mantener la tortuga aunque hayas hecho todo lo anterior) y cómo deshacer los cambios.
+
+**Lo que hay que saber antes de hacerlo:**
+- **Rebaja la seguridad:** desactivar la integridad de memoria quita una protección del equipo. En tu ordenador personal es una decisión razonable si necesitas VirtualBox a buen rendimiento. En un equipo del centro o de una empresa, **no se toca sin permiso** del responsable informático.
+- **Si vuelve a activarse sola tras reiniciar**, está impuesta por una directiva o bloqueada en la UEFI: lo tiene que resolver quien administra el equipo.
+- **Efectos secundarios:** mientras el hipervisor esté desactivado, **no funcionarán WSL 2, el Espacio aislado ni Hyper-V**.
+- **No es obligatorio:** VirtualBox funciona con la tortuga, solo que más lento. Si no se puede desactivar, se puede trabajar igual dando a la VM algo más de RAM y de procesadores.
 
 ### Para practicar
 
@@ -397,7 +427,9 @@ Un **gestor de arranque** (*bootloader*) es el software que se ejecuta justo des
 | El instalador no arranca desde el USB/ISO | Orden de arranque incorrecto en la BIOS/UEFI, o imagen corrupta/mal grabada | Comprobar el checksum de la ISO; revisar el orden de arranque |
 | No hay espacio suficiente para crear la partición | Disco demasiado pequeño, o particiones mal planificadas | Redimensionar el disco virtual o revisar el plan |
 | Tras dual boot, ya no aparece la opción de arrancar Linux | Windows ha añadido su propia entrada de arranque en la NVRAM y se ha puesto primero en el orden de prioridad (los archivos de GRUB en la ESP suelen seguir intactos) | Reordenar/recuperar la entrada de arranque con `efibootmgr` desde un live USB de Linux, o repararla con una herramienta como Boot-Repair |
-| La instalación se queda colgada o va muy lenta | Recursos insuficientes asignados a la VM (RAM/CPU) | Revisar y aumentar la configuración de recursos de la VM |
+| La instalación va muy lenta y en la barra de estado de la VM aparece una **tortuga verde** («Motor de ejecución: API nativa») | El **hipervisor de Windows** está activo en el anfitrión (Hyper-V, WSL 2, Espacio aislado o, muy a menudo, la **integridad de memoria**) y VirtualBox no puede usar VT-x/AMD-V directamente | Seguir los pasos del apartado «VirtualBox y el hipervisor de Windows: la tortuga» del epígrafe 2 (con permiso del responsable del equipo): desactivar esas características y la integridad de memoria, `bcdedit /set hypervisorlaunchtype off` y reiniciar |
+| Windows 11 se queda con la **pantalla en negro** tras el primer reinicio de la instalación | La tortuga anterior, o una configuración de pantalla de la VM que da problemas (aceleración 3D activada o poca memoria de vídeo) | Descartar primero la tortuga. Con la VM apagada, en Configuración → Pantalla: controlador **VBoxSVGA**, **128 MB** de vídeo y aceleración 3D **desactivada**. Al volver a arrancar, la instalación suele continuar donde se quedó |
+| La instalación se queda colgada o va muy lenta (sin tortuga) | Recursos insuficientes asignados a la VM (RAM/CPU) | Revisar y aumentar la configuración de recursos de la VM: al menos 4 GB de RAM y 2 procesadores para Windows 11 |
 | Tras instalar, no hay conexión a internet | Modo de red mal configurado, o faltan las Guest Additions | Revisar el modo de red; reinstalar Guest Additions |
 
 ### Licencias de software
