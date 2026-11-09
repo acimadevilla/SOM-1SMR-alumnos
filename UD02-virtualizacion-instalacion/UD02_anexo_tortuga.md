@@ -9,7 +9,7 @@
 - **Todo se hace en el equipo anfitrión**, el Windows 11 donde está instalado VirtualBox, no dentro de la máquina virtual.
 - **Necesitas una cuenta de administrador.** En los equipos del aula, hazlo solo cuando lo indique tu profesor. En tu ordenador personal, lee antes el apartado «Lo que hay que saber».
 - **Cierra VirtualBox** con todas las máquinas virtuales apagadas.
-- **Copia los comandos desde la versión web** de este anexo en el repositorio (el archivo `.md`), con el botón de copiar de cada bloque. Si los copias del PDF, las líneas largas se pueden partir y el comando falla.
+- **Copia los comandos del archivo de texto `UD02_anexo_tortuga_comandos.txt`**, que está junto a este anexo en el repositorio. Ábrelo con el Bloc de notas: tiene todos los comandos en el mismo orden, cada uno en una sola línea. También puedes copiarlos desde la versión web de este anexo (el archivo `.md`), con el botón de copiar de cada bloque. **No los copies del PDF:** las líneas largas se parten y el comando falla.
 
 ### Abre PowerShell como administrador
 

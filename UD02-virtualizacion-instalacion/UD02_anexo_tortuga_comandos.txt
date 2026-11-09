@@ -1,0 +1,93 @@
+####################################################################
+#  UD02 - Anexo: quitar la "tortuga" de VirtualBox
+#  Comandos para copiar y pegar en PowerShell como ADMINISTRADOR
+#  (clic derecho en Inicio -> Terminal (Administrador))
+#
+#  Lee antes el anexo UD02_anexo_tortuga (PDF o .md): explica que
+#  hace cada comando y cuando NO debes seguir.
+#
+#  - Todo se hace en el Windows del equipo, no dentro de la VM.
+#  - Cierra VirtualBox antes de empezar.
+#  - Copia y pega UN comando cada vez y pulsa Intro.
+#  - Las lineas que empiezan por # son comentarios: no hace falta
+#    copiarlas (si las pegas, PowerShell las ignora).
+####################################################################
+
+
+# ==================================================================
+# PASO 1. DIAGNOSTICO (no cambia nada, solo consulta)
+# ==================================================================
+
+# 1.a. Seguridad basada en virtualizacion
+#      VirtualizationBasedSecurityStatus = 2 -> en ejecucion (causa de la tortuga)
+#      SecurityServicesRunning con 1 -> Credential Guard ; con 2 -> integridad de memoria
+Get-CimInstance -Namespace root\Microsoft\Windows\DeviceGuard -ClassName Win32_DeviceGuard | Select-Object VirtualizationBasedSecurityStatus, SecurityServicesRunning
+
+# 1.b. Arranque del hipervisor: busca la linea hypervisorlaunchtype (Auto u Off)
+#      En PowerShell, {current} va SIEMPRE entre comillas
+bcdedit /enum "{current}"
+
+# 1.c. Caracteristicas de Windows que cargan el hipervisor
+#      Si no sale ninguna linea, no hay ninguna activa
+Get-WindowsOptionalFeature -Online | Where-Object { $_.State -eq "Enabled" -and $_.FeatureName -match "Hyper-V|VirtualMachinePlatform|HypervisorPlatform|DisposableClientVM" } | Select-Object FeatureName
+
+# 1.d. Directiva del centro
+#      "No se ha podido encontrar la clave" -> no hay directiva, puedes seguir
+#      Si DEVUELVE VALORES -> NO SIGAS y avisa a tu profesor
+reg query "HKLM\SOFTWARE\Policies\Microsoft\Windows\DeviceGuard"
+
+
+# ==================================================================
+# PASO 2. DESACTIVAR LO QUE CARGA EL HIPERVISOR
+# ==================================================================
+
+# 2.a. Caracteristicas de Windows (Hyper-V, Plataforma de maquina virtual,
+#      Plataforma del hipervisor, Espacio aislado). Tarda un poco.
+foreach ($f in "Microsoft-Hyper-V-All","VirtualMachinePlatform","HypervisorPlatform","Containers-DisposableClientVM") { Disable-WindowsOptionalFeature -Online -FeatureName $f -NoRestart -ErrorAction SilentlyContinue | Out-Null }
+
+# 2.b. Impedir que el hipervisor arranque con Windows
+bcdedit /set hypervisorlaunchtype off
+
+# 2.c. Desactivar la integridad de memoria
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity" /v Enabled /t REG_DWORD /d 0 /f
+
+# 2.d. Desactivar la seguridad basada en virtualizacion
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard" /v EnableVirtualizationBasedSecurity /t REG_DWORD /d 0 /f
+
+# 2.e. Desactivar Credential Guard (dos comandos)
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v LsaCfgFlags /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DeviceGuard" /v LsaCfgFlags /t REG_DWORD /d 0 /f
+
+
+# ==================================================================
+# PASO 3. REINICIAR
+# ==================================================================
+
+# Inicio -> Iniciar/Apagar -> Reiniciar (NO "Apagar" y encender)
+# O con este comando:
+Restart-Computer
+
+
+# ==================================================================
+# PASO 4. COMPROBAR (otra vez en Terminal (Administrador))
+# ==================================================================
+
+# Debe salir VirtualizationBasedSecurityStatus = 0
+Get-CimInstance -Namespace root\Microsoft\Windows\DeviceGuard -ClassName Win32_DeviceGuard | Select-Object VirtualizationBasedSecurityStatus, SecurityServicesRunning
+
+# Despues, en VirtualBox: chip azul con una "V" en lugar de la tortuga,
+# y en Maquina -> Informacion de sesion: "Motor de ejecucion: VT-x/AMD-V"
+
+
+# ==================================================================
+# DESHACER LOS CAMBIOS (dejar el equipo como estaba) y reiniciar
+# Si alguno dice que no encuentra el valor, no pasa nada.
+# ==================================================================
+
+bcdedit /set hypervisorlaunchtype auto
+reg delete "HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard" /v EnableVirtualizationBasedSecurity /f
+reg delete "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v LsaCfgFlags /f
+reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\DeviceGuard" /v LsaCfgFlags /f
+
+# La integridad de memoria se vuelve a activar en:
+# Seguridad de Windows -> Seguridad del dispositivo -> Aislamiento del nucleo
