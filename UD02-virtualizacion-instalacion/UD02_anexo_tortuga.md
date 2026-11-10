@@ -2,7 +2,109 @@
 
 **Módulo:** Sistemas Operativos Monopuesto · 1º SMR
 
-> **Para qué sirve este anexo.** Si tu máquina virtual va muy lenta y en la barra de estado de su ventana (abajo a la derecha) aparece una **tortuga verde**, VirtualBox está funcionando a través del hipervisor de Windows, en un modo mucho más lento. La explicación de por qué ocurre está en los apuntes, epígrafe 2, apartado «VirtualBox y el hipervisor de Windows: la tortuga». Aquí tienes los comandos listos para copiar y pegar, en orden, para diagnosticarlo y corregirlo.
+> **Para qué sirve este anexo.** Si tu máquina virtual va muy lenta y en la barra de estado de su ventana (abajo a la derecha) aparece una **tortuga verde**, VirtualBox está funcionando a través del hipervisor de Windows, en un modo mucho más lento. La introducción explica por qué ocurre; después tienes los comandos listos para copiar y pegar, en orden, para diagnosticarlo y corregirlo.
+
+## Introducción: por qué aparece la tortuga
+
+Antes de lanzar ningún comando conviene entender qué está pasando. Así sabrás qué hace cada paso y por qué a veces no basta con desmarcar Hyper-V.
+
+### 1. Lo que aporta el procesador: VT-x / AMD-V
+
+Un sistema operativo invitado espera tener el control total de la máquina: modificar la memoria, atender interrupciones, ejecutar instrucciones privilegiadas. Si cada una de esas instrucciones tuviera que interceptarla y emularla un programa, la máquina virtual iría lentísima.
+
+Por eso Intel (**VT-x**) y AMD (**AMD-V**) añadieron al procesador un modo especial con dos niveles:
+
+- **Modo raíz:** ahí se ejecuta el **hipervisor**, que es quien manda.
+- **Modo no raíz:** ahí se ejecuta el sistema invitado, directamente sobre el procesador real y a velocidad casi nativa.
+
+Cuando el invitado intenta algo delicado, el procesador lo detiene automáticamente y devuelve el control al hipervisor. Es lo que se llama una **salida de VM** (*VM exit*). El hipervisor lo resuelve y devuelve el control al invitado.
+
+**La clave es que solo puede haber un dueño del modo raíz.** Quien lo ocupa primero, al arrancar el equipo, es el hipervisor que manda. Es como un coche con un solo volante.
+
+### 2. Cómo usa VirtualBox el procesador cuando está libre
+
+VirtualBox es un hipervisor de **tipo 2**: se instala como una aplicación sobre Windows. Pero instala también un **controlador en el núcleo** de Windows (`VBoxSup.sys`), y ese controlador es el que pide al procesador entrar en modo raíz.
+
+```
+   Invitado (Windows 11 / Ubuntu)         ← modo no raíz, a velocidad nativa
+ ─────────────────────────────────
+   VirtualBox (VBoxSup.sys)               ← modo raíz: VirtualBox controla VT-x
+ ─────────────────────────────────
+   Windows anfitrión
+ ─────────────────────────────────
+   Procesador con VT-x / AMD-V
+```
+
+Cada salida de VM la atiende VirtualBox directamente: un viaje corto. Esto es lo que aparece como **«Motor de ejecución: VT-x/AMD-V»**, con el chip azul de la «V».
+
+### 3. Qué cambia cuando se carga el hipervisor de Windows
+
+**Hyper-V** es un hipervisor de **tipo 1**. Cuando está activo, el equipo arranca en este orden:
+
+1. Se carga el hipervisor de Microsoft, que se queda con el modo raíz.
+2. Encima de él arranca **el propio Windows anfitrión**, convertido en una máquina virtual más. Microsoft la llama *partición raíz*: es privilegiada, pero ya no está en el modo raíz del procesador.
+
+```
+   Invitado de VirtualBox
+ ─────────────────────────────────
+   VirtualBox (pide ayuda por la API WHP)
+ ─────────────────────────────────
+   Windows anfitrión = "partición raíz"   ← ¡también virtualizado!
+ ─────────────────────────────────
+   Hipervisor de Windows                  ← dueño del modo raíz
+ ─────────────────────────────────
+   Procesador con VT-x / AMD-V
+```
+
+Ahora, cuando el controlador de VirtualBox intenta entrar en modo raíz, no puede: el volante ya lo tiene otro. VirtualBox tiene dos opciones, no arrancar o pedir ayuda. Desde la versión 6 elige pedir ayuda: usa la **Plataforma del hipervisor de Windows** (**WHP**), una API con la que Microsoft permite a programas externos pedirle al hipervisor de Windows que ejecute sus máquinas virtuales. Es la **«API nativa»** que ves en la información de sesión, y la **tortuga**.
+
+### 4. Por qué va tan lento
+
+En el modo de la tortuga, cada salida de VM da un viaje mucho más largo:
+
+> invitado → hipervisor de Windows → Windows anfitrión → VirtualBox (que decide qué hacer) → Windows anfitrión → hipervisor de Windows → invitado
+
+Un invitado normal provoca **miles de salidas por segundo**, por el disco, la pantalla, la red, los temporizadores o las interrupciones. Si cada una cuesta varias veces más, el resultado es:
+- instalaciones eternas;
+- pantalla en negro mientras Windows inicializa el vídeo;
+- el ratón a saltos.
+
+A esto se suma que la parte de VirtualBox que trabaja sobre WHP está mucho menos optimizada que la que usa VT-x directamente. Lo mismo ocurre con VMware y otros hipervisores de tipo 2, que también caen a WHP cuando el hipervisor de Windows está activo.
+
+### 5. Por qué no basta con desmarcar Hyper-V
+
+Lo que provoca la tortuga no es la característica «Hyper-V», sino que **el hipervisor de Windows esté cargado**. Y a ese hipervisor no lo usa solo Hyper-V:
+
+| Quién lo usa | Para qué |
+|---|---|
+| Hyper-V | Ejecutar máquinas virtuales de Microsoft |
+| Plataforma de máquina virtual | WSL 2 y Docker Desktop (la VM Linux que ejecutan por debajo) |
+| Espacio aislado de Windows | Un Windows desechable para probar programas |
+| **Seguridad basada en virtualización (VBS)** | Crear una zona de memoria aislada, que ni el propio núcleo de Windows puede tocar, donde guardar lo más sensible |
+
+Esa zona aislada de la VBS es donde funcionan:
+- la **integridad de memoria** (HVCI), que comprueba que el código que se carga en el núcleo es legítimo;
+- **Credential Guard**, que guarda ahí las contraseñas y los tickets del dominio para que un malware no pueda robarlos de la memoria.
+
+Windows 11 activa la VBS **por defecto**, y Credential Guard también en las ediciones Pro, Education y Enterprise unidas a un dominio. Ninguna de las dos aparece en «Características de Windows». Es lo que se comprobó en un equipo del aula:
+- las características estaban desmarcadas;
+- la integridad de memoria estaba desactivada;
+- `hypervisorlaunchtype` estaba en Off;
+- y aun así `VirtualizationBasedSecurityStatus` daba **2**. La VBS seguía obligando a Windows a cargar su hipervisor.
+
+Por eso este anexo no se queda en Hyper-V: también desactiva la VBS y Credential Guard (paso 2).
+
+### 6. En resumen
+
+- El procesador solo admite **un dueño** de VT-x/AMD-V a la vez.
+- Si al arrancar se carga el **hipervisor de Windows**, por Hyper-V, WSL 2, el Espacio aislado o la **VBS**, el dueño es él.
+- VirtualBox no puede usar VT-x directamente y trabaja **a través de él** con la API WHP: es la **tortuga**. Funciona, pero cada salida de VM tarda mucho más.
+- Para quitarla hay que conseguir que **nada cargue ese hipervisor** al arrancar, y no basta con desmarcar Hyper-V: también la VBS y Credential Guard.
+- Hay que elegir: **rendimiento de VirtualBox** o **WSL 2, Hyper-V y la protección de la VBS**. No se pueden tener las dos cosas a pleno rendimiento.
+
+> **Relación con otros módulos.**
+> - **Seguridad Informática:** qué protege Credential Guard (robo de credenciales con herramientas tipo Mimikatz) y por qué desactivarlo es una decisión de seguridad, no solo técnica.
+> - **Montaje y Mantenimiento:** la opción «Intel Virtualization Technology» o «SVM Mode» de la UEFI es la que habilita VT-x o AMD-V. Si está desactivada, no hay volante para nadie.
 
 ## Antes de empezar
 
