@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1190" viewBox="0 0 1200 1190" font-family="'News Gothic MT', 'Helvetica Neue', Arial, sans-serif">
+<defs>
+<pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+<rect width="10" height="10" fill="#FFFFFF"/><line x1="0" y1="0" x2="0" y2="10" stroke="#C9D1E3" stroke-width="4"/></pattern>
+<marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#CD0063"/></marker>
+<marker id="arrg" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2E7D4F"/></marker>
+<marker id="arrd" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1F3864"/></marker>
+</defs>
+<rect width="1200" height="1190" fill="#FFFFFF"/>
+<rect x="0" y="0" width="1200" height="104" fill="#1F3864"/>
+<rect x="0" y="104" width="1200" height="6" fill="#CD0063"/>
+<text x="60" y="50" fill="#FFFFFF" font-size="30" font-weight="bold">Práctica 4 · Por qué falla la instalación de Ubuntu</text>
+<text x="60" y="84" fill="#DDE3F0" font-size="18">«partitioning crashed with CurtinInstallError»: la copia de la tabla GPT se queda fuera de sitio al ampliar el disco</text>
+<rect x="30" y="128" width="1140" height="200" rx="12" fill="#EEF1F8"/>
+<rect x="30" y="128" width="8" height="200" rx="4" fill="#1F3864"/>
+<circle cx="76" cy="158" r="16" fill="#1F3864"/><text x="76" y="164" text-anchor="middle" fill="#fff" font-size="18" font-weight="bold">1</text>
+<text x="104" y="165" fill="#1F3864" font-size="21" font-weight="bold">Disco original de la Práctica 2: 64 GB</text>
+<text x="104" y="188" fill="#5B6472" font-size="15">Windows ocupa todo el disco. La copia de la GPT está en su sitio: al final del disco. ✔</text>
+<rect x="60" y="204" width="40" height="64" fill="#3E5D93" stroke="#FFFFFF" stroke-width="2" />
+<text x="80.0" y="232.6" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">GPT</text>
+<text x="80.0" y="248.6" text-anchor="middle" fill="#FFFFFF" font-size="13" >princ.</text>
+<rect x="100" y="204" width="58" height="64" fill="#6A8CC7" stroke="#FFFFFF" stroke-width="2" />
+<text x="129.0" y="232.6" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">EFI</text>
+<text x="129.0" y="248.6" text-anchor="middle" fill="#FFFFFF" font-size="13" >100 MB</text>
+<rect x="158" y="204" width="44" height="64" fill="#9AA5B8" stroke="#FFFFFF" stroke-width="2" />
+<text x="180.0" y="232.6" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">MSR</text>
+<text x="180.0" y="248.6" text-anchor="middle" fill="#FFFFFF" font-size="13" >16 MB</text>
+<rect x="202" y="204" width="425" height="64" fill="#1F3864" stroke="#FFFFFF" stroke-width="2" />
+<text x="414.5" y="232.1" text-anchor="middle" fill="#FFFFFF" font-size="16" font-weight="bold">C:  Windows 11</text>
+<text x="414.5" y="251.1" text-anchor="middle" fill="#FFFFFF" font-size="16" >NTFS</text>
+<rect x="627" y="204" width="84" height="64" fill="#4F6FA8" stroke="#FFFFFF" stroke-width="2" />
+<text x="669.0" y="232.1" text-anchor="middle" fill="#FFFFFF" font-size="16" font-weight="bold">Recup.</text>
+<text x="669.0" y="251.1" text-anchor="middle" fill="#FFFFFF" font-size="16" >~1 GB</text>
+<rect x="711" y="204" width="40" height="64" fill="#3E5D93" stroke="#FFFFFF" stroke-width="2" />
+<text x="731.0" y="232.6" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">GPT</text>
+<text x="731.0" y="248.6" text-anchor="middle" fill="#FFFFFF" font-size="13" >copia</text>
+<line x1="751" y1="194" x2="751" y2="278" stroke="#5B6472" stroke-width="2" stroke-dasharray="5,4"/>
+<text x="751" y="296" text-anchor="end" fill="#5B6472" font-size="13">fin del disco (64 GB)</text>
+<rect x="30" y="343" width="1140" height="200" rx="12" fill="#EEF1F8"/>
+<rect x="30" y="343" width="8" height="200" rx="4" fill="#CD0063"/>
+<circle cx="76" cy="373" r="16" fill="#CD0063"/><text x="76" y="379" text-anchor="middle" fill="#fff" font-size="18" font-weight="bold">2</text>
+<text x="104" y="380" fill="#CD0063" font-size="21" font-weight="bold">Tras ampliar el VDI a 100 GB en VirtualBox: el problema</text>
+<text x="104" y="403" fill="#5B6472" font-size="15">VirtualBox añade 36 GB al final, pero no mueve la copia de la GPT: se queda en el antiguo final.</text>
+<rect x="60" y="419" width="40" height="64" fill="#3E5D93" stroke="#FFFFFF" stroke-width="2" />
+<text x="80.0" y="447.6" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">GPT</text>
+<text x="80.0" y="463.6" text-anchor="middle" fill="#FFFFFF" font-size="13" >princ.</text>
+<rect x="100" y="419" width="58" height="64" fill="#6A8CC7" stroke="#FFFFFF" stroke-width="2" />
+<text x="129.0" y="447.6" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">EFI</text>
+<text x="129.0" y="463.6" text-anchor="middle" fill="#FFFFFF" font-size="13" >100 MB</text>
+<rect x="158" y="419" width="44" height="64" fill="#9AA5B8" stroke="#FFFFFF" stroke-width="2" />
+<text x="180.0" y="447.6" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">MSR</text>
+<text x="180.0" y="463.6" text-anchor="middle" fill="#FFFFFF" font-size="13" >16 MB</text>
+<rect x="202" y="419" width="425" height="64" fill="#1F3864" stroke="#FFFFFF" stroke-width="2" />
+<text x="414.5" y="447.1" text-anchor="middle" fill="#FFFFFF" font-size="16" font-weight="bold">C:  Windows 11</text>
+<text x="414.5" y="466.1" text-anchor="middle" fill="#FFFFFF" font-size="16" >NTFS</text>
+<rect x="627" y="419" width="84" height="64" fill="#4F6FA8" stroke="#FFFFFF" stroke-width="2" />
+<text x="669.0" y="447.1" text-anchor="middle" fill="#FFFFFF" font-size="16" font-weight="bold">Recup.</text>
+<text x="669.0" y="466.1" text-anchor="middle" fill="#FFFFFF" font-size="16" >~1 GB</text>
+<rect x="711" y="419" width="40" height="64" fill="#CD0063" stroke="#FFFFFF" stroke-width="2" />
+<text x="731.0" y="447.6" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">GPT</text>
+<text x="731.0" y="463.6" text-anchor="middle" fill="#FFFFFF" font-size="13" >copia</text>
+<rect x="707" y="415" width="48" height="72" fill="none" stroke="#CD0063" stroke-width="3" rx="3"/>
+<rect x="751" y="419" width="389" height="64" fill="url(#hatch)" stroke="#9AA5B8" stroke-width="2" />
+<text x="945.5" y="447.1" text-anchor="middle" fill="#1F3864" font-size="16" font-weight="bold">36 GB no asignados</text>
+<text x="945.5" y="466.1" text-anchor="middle" fill="#1F3864" font-size="16" >(aquí irá Ubuntu)</text>
+<line x1="1140" y1="409" x2="1140" y2="493" stroke="#5B6472" stroke-width="2" stroke-dasharray="5,4"/>
+<text x="1140" y="511" text-anchor="end" fill="#5B6472" font-size="13">fin real del disco (100 GB)</text>
+<text x="731.0" y="511" text-anchor="middle" fill="#CD0063" font-size="14" font-weight="bold">✘ copia fuera de sitio</text>
+<text x="60" y="511" fill="#CD0063" font-size="14" font-weight="bold">El instalador ve una tabla incoherente y se detiene → CurtinInstallError</text>
+<rect x="30" y="558" width="1140" height="200" rx="12" fill="#EEF1F8"/>
+<rect x="30" y="558" width="8" height="200" rx="4" fill="#2E7D4F"/>
+<circle cx="76" cy="588" r="16" fill="#2E7D4F"/><text x="76" y="594" text-anchor="middle" fill="#fff" font-size="18" font-weight="bold">3</text>
+<text x="104" y="595" fill="#2E7D4F" font-size="21" font-weight="bold">La solución: sudo parted -l → Fix</text>
+<text x="104" y="618" fill="#5B6472" font-size="15">parted mueve la copia de la GPT al nuevo final. No toca ninguna partición ni ningún dato.</text>
+<rect x="60" y="634" width="40" height="64" fill="#3E5D93" stroke="#FFFFFF" stroke-width="2" />
+<text x="80.0" y="662.5" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">GPT</text>
+<text x="80.0" y="678.5" text-anchor="middle" fill="#FFFFFF" font-size="13" >princ.</text>
+<rect x="100" y="634" width="58" height="64" fill="#6A8CC7" stroke="#FFFFFF" stroke-width="2" />
+<text x="129.0" y="662.5" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">EFI</text>
+<text x="129.0" y="678.5" text-anchor="middle" fill="#FFFFFF" font-size="13" >100 MB</text>
+<rect x="158" y="634" width="44" height="64" fill="#9AA5B8" stroke="#FFFFFF" stroke-width="2" />
+<text x="180.0" y="662.5" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">MSR</text>
+<text x="180.0" y="678.5" text-anchor="middle" fill="#FFFFFF" font-size="13" >16 MB</text>
+<rect x="202" y="634" width="425" height="64" fill="#1F3864" stroke="#FFFFFF" stroke-width="2" />
+<text x="414.5" y="662.1" text-anchor="middle" fill="#FFFFFF" font-size="16" font-weight="bold">C:  Windows 11</text>
+<text x="414.5" y="681.1" text-anchor="middle" fill="#FFFFFF" font-size="16" >NTFS</text>
+<rect x="627" y="634" width="84" height="64" fill="#4F6FA8" stroke="#FFFFFF" stroke-width="2" />
+<text x="669.0" y="662.1" text-anchor="middle" fill="#FFFFFF" font-size="16" font-weight="bold">Recup.</text>
+<text x="669.0" y="681.1" text-anchor="middle" fill="#FFFFFF" font-size="16" >~1 GB</text>
+<rect x="711" y="634" width="389" height="64" fill="url(#hatch)" stroke="#9AA5B8" stroke-width="2" />
+<text x="905.5" y="671.6" text-anchor="middle" fill="#1F3864" font-size="16" font-weight="bold">36 GB libres, ahora utilizables</text>
+<rect x="1100" y="634" width="40" height="64" fill="#2E7D4F" stroke="#FFFFFF" stroke-width="2" />
+<text x="1120.0" y="662.5" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">GPT</text>
+<text x="1120.0" y="678.5" text-anchor="middle" fill="#FFFFFF" font-size="13" >copia</text>
+<path d="M731.0,702 C 911,736 900,736 1120.0,706" fill="none" stroke="#2E7D4F" stroke-width="2.5" stroke-dasharray="7,5" marker-end="url(#arrg)"/>
+<text x="925.5" y="748" text-anchor="middle" fill="#2E7D4F" font-size="14" font-weight="bold">la copia de la GPT pasa al nuevo final del disco (100 GB) ✔</text>
+<rect x="30" y="773" width="1140" height="200" rx="12" fill="#EEF1F8"/>
+<rect x="30" y="773" width="8" height="200" rx="4" fill="#E95420"/>
+<circle cx="76" cy="803" r="16" fill="#E95420"/><text x="76" y="809" text-anchor="middle" fill="#fff" font-size="18" font-weight="bold">4</text>
+<text x="104" y="810" fill="#E95420" font-size="21" font-weight="bold">Resultado: instalación de Ubuntu en el espacio libre</text>
+<text x="104" y="833" fill="#5B6472" font-size="15">Instalación manual: ext4 con punto de montaje / en el espacio libre. GRUB se guarda en la EFI de Windows, que se comparte.</text>
+<rect x="60" y="849" width="40" height="64" fill="#3E5D93" stroke="#FFFFFF" stroke-width="2" />
+<text x="80.0" y="877.5" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">GPT</text>
+<text x="80.0" y="893.5" text-anchor="middle" fill="#FFFFFF" font-size="13" >princ.</text>
+<rect x="100" y="849" width="58" height="64" fill="#6A8CC7" stroke="#FFFFFF" stroke-width="2" />
+<text x="129.0" y="877.5" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">EFI</text>
+<text x="129.0" y="893.5" text-anchor="middle" fill="#FFFFFF" font-size="13" >100 MB</text>
+<rect x="158" y="849" width="44" height="64" fill="#9AA5B8" stroke="#FFFFFF" stroke-width="2" />
+<text x="180.0" y="877.5" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">MSR</text>
+<text x="180.0" y="893.5" text-anchor="middle" fill="#FFFFFF" font-size="13" >16 MB</text>
+<rect x="202" y="849" width="425" height="64" fill="#1F3864" stroke="#FFFFFF" stroke-width="2" />
+<text x="414.5" y="877.1" text-anchor="middle" fill="#FFFFFF" font-size="16" font-weight="bold">C:  Windows 11</text>
+<text x="414.5" y="896.1" text-anchor="middle" fill="#FFFFFF" font-size="16" >NTFS</text>
+<rect x="627" y="849" width="84" height="64" fill="#4F6FA8" stroke="#FFFFFF" stroke-width="2" />
+<text x="669.0" y="877.1" text-anchor="middle" fill="#FFFFFF" font-size="16" font-weight="bold">Recup.</text>
+<text x="669.0" y="896.1" text-anchor="middle" fill="#FFFFFF" font-size="16" >~1 GB</text>
+<rect x="711" y="849" width="389" height="64" fill="#E95420" stroke="#FFFFFF" stroke-width="2" />
+<text x="905.5" y="877.1" text-anchor="middle" fill="#FFFFFF" font-size="16" font-weight="bold">Ubuntu 26.04 · ext4 · /</text>
+<text x="905.5" y="896.1" text-anchor="middle" fill="#FFFFFF" font-size="16" >MV-Dual-inicialapellido</text>
+<rect x="1100" y="849" width="40" height="64" fill="#3E5D93" stroke="#FFFFFF" stroke-width="2" />
+<text x="1120.0" y="877.5" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">GPT</text>
+<text x="1120.0" y="893.5" text-anchor="middle" fill="#FFFFFF" font-size="13" >copia</text>
+<text x="60" y="941" fill="#5B6472" font-size="14">Las cuatro particiones de Windows (EFI, MSR, C: y Recuperación) no se tocan: ni borrar, ni formatear, ni cambiar su punto de montaje.</text>
+<text x="60" y="1002" fill="#1F3864" font-size="21" font-weight="bold">Pasos en la sesión en vivo de Ubuntu</text>
+<rect x="60" y="1012" width="1080" height="3" fill="#CD0063"/>
+<rect x="60.0" y="1030" width="168.3" height="92" rx="10" fill="#FFFFFF" stroke="#1F3864" stroke-width="1.5"/>
+<circle cx="82.0" cy="1054" r="13" fill="#CD0063"/><text x="82.0" y="1059" text-anchor="middle" fill="#fff" font-size="15" font-weight="bold">1</text>
+<text x="102.0" y="1059" fill="#1A1A2E" font-size="14" font-weight="bold">Cerrar informe</text>
+<rect x="72.0" y="1076" width="144.3" height="32" rx="6" fill="#EEF1F8"/>
+<text x="144.2" y="1097" text-anchor="middle" fill="#1F3864" font-size="15" font-weight="bold">Don't send</text>
+<rect x="242.3" y="1030" width="168.3" height="92" rx="10" fill="#FFFFFF" stroke="#1F3864" stroke-width="1.5"/>
+<circle cx="264.3" cy="1054" r="13" fill="#CD0063"/><text x="264.3" y="1059" text-anchor="middle" fill="#fff" font-size="15" font-weight="bold">2</text>
+<text x="284.3" y="1059" fill="#1A1A2E" font-size="14" font-weight="bold">Abrir terminal</text>
+<rect x="254.3" y="1076" width="144.3" height="32" rx="6" fill="#F3F3F3"/>
+<text x="326.5" y="1097" text-anchor="middle" fill="#9B1B5C" font-size="15" font-family="Menlo, Consolas, monospace">Ctrl+Alt+T</text>
+<rect x="424.7" y="1030" width="168.3" height="92" rx="10" fill="#FFFFFF" stroke="#1F3864" stroke-width="1.5"/>
+<circle cx="446.7" cy="1054" r="13" fill="#CD0063"/><text x="446.7" y="1059" text-anchor="middle" fill="#fff" font-size="15" font-weight="bold">3</text>
+<text x="466.7" y="1059" fill="#1A1A2E" font-size="14" font-weight="bold">Revisar disco</text>
+<rect x="436.7" y="1076" width="144.3" height="32" rx="6" fill="#F3F3F3"/>
+<text x="508.8" y="1097" text-anchor="middle" fill="#9B1B5C" font-size="15" font-family="Menlo, Consolas, monospace">sudo parted -l</text>
+<rect x="607.0" y="1030" width="168.3" height="92" rx="10" fill="#FFFFFF" stroke="#1F3864" stroke-width="1.5"/>
+<circle cx="629.0" cy="1054" r="13" fill="#CD0063"/><text x="629.0" y="1059" text-anchor="middle" fill="#fff" font-size="15" font-weight="bold">4</text>
+<text x="649.0" y="1059" fill="#1A1A2E" font-size="14" font-weight="bold">Responder</text>
+<rect x="619.0" y="1076" width="144.3" height="32" rx="6" fill="#F3F3F3"/>
+<text x="691.2" y="1097" text-anchor="middle" fill="#9B1B5C" font-size="15" font-family="Menlo, Consolas, monospace">Fix</text>
+<rect x="789.3" y="1030" width="168.3" height="92" rx="10" fill="#FFFFFF" stroke="#1F3864" stroke-width="1.5"/>
+<circle cx="811.3" cy="1054" r="13" fill="#CD0063"/><text x="811.3" y="1059" text-anchor="middle" fill="#fff" font-size="15" font-weight="bold">5</text>
+<text x="831.3" y="1059" fill="#1A1A2E" font-size="14" font-weight="bold">Comprobar</text>
+<rect x="801.3" y="1076" width="144.3" height="32" rx="6" fill="#F3F3F3"/>
+<text x="873.5" y="1097" text-anchor="middle" fill="#9B1B5C" font-size="15" font-family="Menlo, Consolas, monospace">sudo parted -l</text>
+<rect x="971.7" y="1030" width="168.3" height="92" rx="10" fill="#FFFFFF" stroke="#1F3864" stroke-width="1.5"/>
+<circle cx="993.7" cy="1054" r="13" fill="#CD0063"/><text x="993.7" y="1059" text-anchor="middle" fill="#fff" font-size="15" font-weight="bold">6</text>
+<text x="1013.7" y="1059" fill="#1A1A2E" font-size="14" font-weight="bold">Reinstalar</text>
+<rect x="983.7" y="1076" width="144.3" height="32" rx="6" fill="#EEF1F8"/>
+<text x="1055.8" y="1097" text-anchor="middle" fill="#1F3864" font-size="15" font-weight="bold">Apartado 2</text>
+<text x="60" y="1176" fill="#5B6472" font-size="12">Esquema no a escala. GPT: tabla de particiones GUID, guardada dos veces (principio y final del disco). MSR: partición reservada de Microsoft. IES Medina Azahara · SOM · 1º SMR</text>
+</svg>

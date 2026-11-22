@@ -14,17 +14,11 @@
 
 El disco de la VM usa una tabla de particiones **GPT**. GPT guarda la tabla **dos veces**: una al principio del disco y una copia de seguridad **al final**. Así, si una se estropea, se puede recuperar con la otra.
 
-En el apartado 1 de la práctica ampliaste el disco virtual de 64 GB a 100 GB desde VirtualBox. VirtualBox añadió el espacio, pero **no movió la copia de la tabla**, que se quedó donde antes acababa el disco:
+En el apartado 1 de la práctica ampliaste el disco virtual de 64 GB a 100 GB desde VirtualBox. VirtualBox añadió el espacio, pero **no movió la copia de la tabla**, que se quedó donde antes acababa el disco. La infografía resume el problema y la solución:
 
-```
-Antes de ampliar (64 GB):
-[GPT principal][ EFI | MSR | C: (Windows) | Recuperación ][GPT copia]
+![Estructura del disco antes y después de ampliarlo, y cómo se corrige con parted](UD02_P4_infografia_gpt.png)
 
-Después de ampliar (100 GB):
-[GPT principal][ EFI | MSR | C: (Windows) | Recuperación ][GPT copia][ 36 GB libres ...... ]
-                                                              ↑
-                                         la copia ya no está al final del disco
-```
+En el disco de Windows verás cuatro particiones: la **EFI** (100 MB, con los archivos de arranque), la **MSR** o reservada de Microsoft (16 MB, sin formato; Windows la usa internamente y el Administrador de discos no la muestra), **C:** y la de **recuperación** (unos 1 GB, con el entorno de reparación WinRE). Ninguna de las cuatro se toca durante la práctica.
 
 Windows funciona igual, pero el instalador de Ubuntu encuentra una tabla de particiones incoherente: la copia no está donde debería y estorba en mitad del espacio libre. En lugar de arriesgarse a estropear el disco, se detiene.
 
